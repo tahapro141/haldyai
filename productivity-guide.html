@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Guide | Hald AI</title>
+    <link rel="shortcut icon" href="public/logo.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #05000a;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .glow-text {
+            text-shadow: 0 0 20px rgba(192, 38, 211, 0.5);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: rgba(192, 38, 211, 0.4);
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <nav class="p-6 flex justify-between items-center max-w-6xl mx-auto">
+        <a href="/" class="flex items-center gap-2">
+            <img src="public/logo.png" class="w-8 h-8">
+            <span class="font-bold text-xl">Hald AI</span>
+        </a>
+        <a href="/dashboard" class="text-sm font-medium hover:text-purple-400 transition-colors">Go to Dashboard →</a>
+    </nav>
+
+    <header class="max-w-4xl mx-auto px-6 pt-20 pb-12 text-center">
+        <h1 class="text-5xl md:text-7xl font-800 mb-6 bg-gradient-to-b from-white to-purple-400 bg-clip-text text-transparent">Master Your Mind.</h1>
+        <p class="text-xl text-gray-400 leading-relaxed">A complete guide to organizing your life with Hald AI OS.</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 space-y-20">
+        <!-- Section 1 -->
+        <section>
+            <h2 class="text-3xl font-bold mb-8 flex items-center gap-4">
+                <span class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-sm">01</span>
+                Capture at Speed
+            </h2>
+            <div class="card p-8 rounded-3xl">
+                <p class="text-gray-300 text-lg mb-6">Productivity starts with clear space. Use the <span class="text-white font-semibold">"Add Node"</span> feature to dump every single thought, task, or worry out of your brain.</p>
+                <ul class="space-y-4 text-gray-400">
+                    <li class="flex gap-3"><span class="text-purple-500">✓</span> Don't filter. Just write.</li>
+                    <li class="flex gap-3"><span class="text-purple-500">✓</span> Use the Agent to create cards via voice/text.</li>
+                    <li class="flex gap-3"><span class="text-purple-500">✓</span> Categorize later, capture NOW.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section>
+            <h2 class="text-3xl font-bold mb-8 flex items-center gap-4">
+                <span class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-sm">02</span>
+                The Power of Cards
+            </h2>
+            <div class="card p-8 rounded-3xl">
+                <p class="text-gray-300 text-lg mb-6">Organize your world into logical columns. Think of cards as containers for different areas of your life.</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                        <h3 class="font-bold text-white mb-2">Work & Projects</h3>
+                        <p class="text-sm text-gray-400">Deadlines, meeting notes, and roadmap items.</p>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                        <h3 class="font-bold text-white mb-2">Personal Growth</h3>
+                        <p class="text-sm text-gray-400">Books to read, gym routines, and habits.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section>
+            <h2 class="text-3xl font-bold mb-8 flex items-center gap-4">
+                <span class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-sm">03</span>
+                Deep Work Timers
+            </h2>
+            <div class="card p-8 rounded-3xl border-purple-500/30 bg-purple-500/5">
+                <p class="text-gray-300 text-lg mb-6">Tasks without time are just dreams. Use the <span class="text-purple-400">Integrated Timer</span> to commit to a focus block.</p>
+                <p class="text-gray-400 italic">"The Pomodoro technique is built into every node. Set a 25-minute timer and enter the flow state."</p>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section>
+            <h2 class="text-3xl font-bold mb-8 flex items-center gap-4">
+                <span class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-sm">04</span>
+                Ask the Agent
+            </h2>
+            <div class="card p-8 rounded-3xl">
+                <p class="text-gray-300 text-lg mb-6">Our AI isn't just a chatbot; it's an operator. Ask it to "organize my tasks" or "create a plan for my next trip".</p>
+                <div class="bg-black/40 p-4 rounded-xl font-mono text-sm text-purple-300">
+                    > "Hey haldAI, add a card called 'Marketing' and add 3 tasks for social media strategy."
+                </div>
+            </div>
+        </section>
+
+        <section class="text-center pt-10">
+            <h2 class="text-3xl font-bold mb-6">Ready to be obsessed?</h2>
+            <a href="/dashboard" class="inline-block bg-white text-black px-10 py-4 rounded-full font-bold hover:scale-105 transition-transform">Get Started Now</a>
+        </section>
+    </main>
+</body>
+</html>
