@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing</title>
+  <link rel="shortcut icon" href="public/logo.png" type="image/x-icon">
+  <style>
+    :root {
+      --bg-color: #020005;
+      --card-bg: rgba(13, 0, 20, 0.6);
+      --text-main: #ffffff;
+      --text-muted: #a3a3a3;
+      --accent-primary: #800080;
+      --accent-glow: #b026b0;
+      --border-color: #330033;
+      --success: #00ff9d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* --- BACKGROUND (Matches Index) --- */
+    .fixed-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: -999;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle at 50% -20%, rgba(120, 30, 150, 0.2) 0%, transparent 50%),
+        radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+      background-size: 100% 100%, 50px 50px, 100px 100px;
+      background-position: 0 0, 0 0, 25px 25px;
+    }
+
+    /* --- FLOATING NAVBAR (From Docs) --- */
+    .navbar {
+      position: fixed;
+      top: 20px; /* Floating gap */
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 40px);
+      max-width: 1200px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(10, 5, 16, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .logo-img { height: 28px; width: auto; }
+    .site-name { font-size: 1.1rem; font-weight: 700; color: #fff; text-decoration: none; }
+
+    .nav-center { display: flex; gap: 32px; }
+    .nav-link {
+      color: #a0a0a0;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-link:hover, .nav-link.active { color: #fff; }
+
+    .nav-right .nav-btn {
+      background: #fff;
+      color: #000;
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: transform 0.2s;
+    }
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+
+    /* --- HERO SECTION --- */
+    .pricing-hero {
+      text-align: center;
+      padding-top: 140px; /* Adjusted for floating navbar */
+      padding-bottom: 60px;
+    }
+
+    .pricing-hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      background: linear-gradient(to bottom, #ffffff, #d65add);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+
+    .pricing-hero p {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* --- PRICING GRID --- */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px 100px 20px;
+    }
+
+    .price-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 40px;
+      position: relative;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .price-card:hover {
+      transform: translateY(-10px);
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 30px rgba(128, 0, 128, 0.15);
+    }
+
+    /* Featured Card Styling */
+    .price-card.featured {
+      border: 1px solid var(--accent-primary);
+      background: linear-gradient(180deg, rgba(128, 0, 128, 0.1) 0%, rgba(2, 0, 5, 0.8) 100%);
+      box-shadow: 0 0 40px rgba(128, 0, 128, 0.1);
+    }
+
+    .price-card.featured::before {
+      content: 'MOST POPULAR';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-primary);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+      letter-spacing: 1px;
+      box-shadow: 0 0 10px var(--accent-primary);
+    }
+
+    .plan-name {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .plan-price {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: white;
+      display: flex;
+      align-items: baseline;
+    }
+
+    .plan-price span {
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-left: 5px;
+    }
+
+    .plan-desc {
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin-bottom: 40px;
+      flex-grow: 1;
+      /* Pushes button to bottom */
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      color: #d4d4d4;
+      font-size: 0.95rem;
+    }
+
+    .feature-list li svg {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .check-icon {
+      fill: var(--accent-primary);
+    }
+
+    .check-icon-bright {
+      fill: #d65add;
+      filter: drop-shadow(0 0 5px var(--accent-primary));
+    }
+
+    .cta-button {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    /* Secondary Button */
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-outline:hover {
+      border-color: white;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Primary Button */
+    .btn-fill {
+      background: var(--accent-primary);
+      border: none;
+      color: white;
+      box-shadow: 0 0 15px rgba(128, 0, 128, 0.4);
+    }
+
+    .btn-fill:hover {
+      background: #990099;
+      box-shadow: 0 0 25px rgba(128, 0, 128, 0.6);
+      transform: scale(1.02);
+    }
+
+    /* AI Glow Effect specific for the last card */
+    .ai-glow {
+      animation: pulse-purple 3s infinite alternate;
+    }
+
+    @keyframes pulse-purple {
+      from {
+        box-shadow: 0 0 20px rgba(128, 0, 128, 0.1);
+        border-color: rgba(128, 0, 128, 0.3);
+      }
+
+      to {
+        box-shadow: 0 0 40px rgba(128, 0, 128, 0.3);
+        border-color: rgba(128, 0, 128, 0.8);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .pricing-hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-center { display: none; }
+      .navbar { padding: 0 16px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- VISUAL FX -->
+  <div class="fixed-background"></div>
+
+  <!-- FLOATING NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <img src="/public/logo.png" alt="HaldAI" class="logo-img">
+      <a href="/" class="site-name">HaldAI</a>
+    </div>
+    <div class="nav-center">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/docs" class="nav-link">Docs</a>
+      <a href="/pricing" class="nav-link active">Pricing</a>
+    </div>
+    <div class="nav-right">
+      <a href="/dashboard" class="nav-btn">Launch App</a>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="pricing-hero">
+    <h1>Invest in your Flow State.</h1>
+    <p>Choose the plan that fits your obsession level.</p>
+  </div>
+
+  <div class="pricing-grid">
+
+    <!-- STARTER PLAN -->
+    <div class="price-card">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">$0 <span>/mo</span></div>
+      <p class="plan-desc">Essential tools to organize your daily chaos.</p>
+
+      <ul class="feature-list">
+        <li>
+          <svg class="check-icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          3 Task Boards
+        </li>
+        <li>
+          <svg class="check-icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          50 Tasks per Board
+        </li>
+        <li>
+          <svg class="check-icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          Basic Kanban Features
+        </li>
+        <li style="opacity: 0.3; text-decoration: line-through;">
+          <svg fill="#555" viewBox="0 0 24 24" width="20" height="20">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+          AI Features
+        </li>
+      </ul>
+
+      <button class="cta-button btn-outline">Start for Free</button>
+    </div>
+
+    <!-- PRO PLAN -->
+    <div class="price-card featured">
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$10 <span>/mo</span></div>
+      <p class="plan-desc">For power users who need clarity and speed.</p>
+
+      <ul class="feature-list">
+        <li>
+          <svg class="check-icon-bright" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          <strong>Unlimited Task Boards</strong>
+        </li>
+        <li>
+          <svg class="check-icon-bright" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          <strong>Unlimited Tasks</strong>
+        </li>
+        <li>
+          <svg class="check-icon-bright" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          Advanced Kanban Features
+        </li>
+        <li>
+          <svg class="check-icon-bright" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          Full Calendar Sync
+        </li>
+        <li>
+          <svg class="check-icon-bright" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          50 Notebook Pages
+        </li>
+      </ul>
+
+      <button class="cta-button btn-fill" onclick="upgrade('pro')">Get Pro</button>
+    </div>
+
+    <!-- AI / OBSESSED PLAN -->
+    <div class="price-card ai-glow">
+      <div class="plan-name" style="color: #d65add;">Obsessed</div>
+      <div class="plan-price">$20 <span>/mo</span></div>
+      <p class="plan-desc">The ultimate system with an AI second brain.</p>
+
+      <ul class="feature-list">
+        <li>
+          <svg class="check-icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          <strong>Everything in Pro</strong>
+        </li>
+        <li>
+          <svg class="check-icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          Unlimited Notebook Pages
+        </li>
+        <li style="color:white; text-shadow: 0 0 10px #800080;">
+          <svg class="check-icon-bright" viewBox="0 0 24 24">
+            <path
+              d="M9.37,5.51L7,9l6.13-2.68L12,5.51L9.37,5.51z M12,2l-5.5,9L2,13.5l5.5,2.5L2,22l10-3l10,3l-5.5-6L22,13.5L17.5,11L12,2z" />
+          </svg>
+          <strong>AI Terminal Access</strong>
+        </li>
+        <li style="color:white; text-shadow: 0 0 10px #800080;">
+          <svg class="check-icon-bright" viewBox="0 0 24 24">
+            <path
+              d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,17c-0.55,0-1-0.45-1-1v-4 c0-0.55,0.45-1,1-1s1,0.45,1,1v4C13,16.55,12.55,17,12,17z M12,10c-0.55,0-1-0.45-1-1V6c0-0.55,0.45-1,1-1s1,0.45,1,1v3 C13,9.55,12.55,10,12,10z" />
+          </svg>
+          <strong>Voice AI Assistant</strong>
+        </li>
+      </ul>
+
+      <button class="cta-button btn-outline" style="border-color: #800080; color: #f0aaff;"
+        onclick="upgrade('obsessed')">Join the Obsessed</button>
+    </div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+    async function upgrade(plan) {
+      // Check auth first
+      try {
+        const check = await fetch(`${CONFIG.API_BASE_URL}/auth/check`, { credentials: 'include' }).then(r => r.json());
+        if (!check.authenticated) {
+            window.location.href = '/signin';
+          return;
+        }
+
+        const email = check.user.email;
+        const res = await fetch(`${CONFIG.API_BASE_URL}/api/upgrade`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, plan })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = data.url;
+        } else {
+          alert('Upgrade failed: ' + (data.error || 'Unknown'));
+        }
+      } catch (e) {
+        console.error(e);
+        window.location.href = '/signin';
+      }
+    }
+  </script>
+</body>
+
+</html>

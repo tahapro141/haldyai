@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy</title>
+    <link rel="shortcut icon" href="public/logo.png" type="image/x-icon">
+    <!-- Font: Inter for that clean tech look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+       1. CORE RESET & VARIABLES
+       ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* In your globals.css or a CSS module */
+        ::selection {
+            background-color: white;
+            /* Pure purple */
+            color: #800080;
+            /* Pure white text */
+            text-shadow: none;
+        }
+
+        ::-moz-selection {
+            background-color: white;
+            /* Pure purple */
+            color: #800080;
+            /* Pure white text */
+            text-shadow: none;
+        }
+
+        /* Works on Chrome, Edge, and Safari */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        /* The track (the background of the scrollbar) */
+        ::-webkit-scrollbar-track {
+            background: #000000;
+            /* A dark color that matches your page background */
+        }
+
+        /* The draggable scrolling handle */
+        ::-webkit-scrollbar-thumb {
+            background-color: #800080;
+            /* The core purple color */
+            border-radius: 20px;
+            /* Fully rounded edges */
+            border: 3px solid #1A1A1A;
+            /* Creates a nice padding effect */
+            box-shadow: 0 0 10px #000000, 0 0 5px #800080;
+            /* The purple glow */
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* Handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #800080;
+            /* A brighter purple on hover */
+            box-shadow: 0 0 15px #b19cd9, 0 0 10px #9370db;
+            /* A more intense glow */
+        }
+
+        /* Handle on active state (when you're clicking and dragging) */
+        ::-webkit-scrollbar-thumb:active {
+            background-color: #700070;
+            box-shadow: 0 0 20px #000000, 0 0 15px #b19cd9;
+        }
+
+        body {
+            background-color: #05000a;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            /* IMPORTANT: Remove any background-image lines from here */
+            background-image: none;
+        }
+
+        /* This creates the global fixed dots automatically */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -999;
+            pointer-events: none;
+            background-image:
+                radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px, 100px 100px;
+            background-position: 0 0, 25px 25px;
+        }
+
+        .fixed-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -999;
+            /* Behind everything */
+            pointer-events: none;
+
+            background-image:
+                /* 1. The Top Glow (Soft & subtle now) */
+                radial-gradient(circle at 50% -20%, rgba(120, 30, 150, 0.2) 0%, transparent 50%),
+
+                /* 2. The Dots (Clean and crisp) */
+                radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+
+            background-size: 100% 100%, 50px 50px, 100px 100px;
+            background-position: 0 0, 0 0, 25px 25px;
+        }
+
+        /* =========================================
+       2. NAVBAR (Transparent & Centered)
+       ========================================= */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 60px;
+            background: transparent;
+            z-index: 1000;
+        }
+
+        /* Left: Logo */
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .logo-img {
+            height: 32px;
+            width: auto;
+        }
+
+        .site-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #fff;
+        }
+
+        /* Center: Links */
+        .nav-center {
+            display: flex;
+            gap: 40px;
+            flex: 2;
+            justify-content: center;
+        }
+
+        .nav-link {
+            color: #a0a0a0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Right: Button */
+        .nav-right {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Use the same style as the Hero button for consistency, but smaller */
+        .nav-btn {
+            background: #ffffff;
+            color: #000000;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* =========================================
+       3. CONTENT STYLING
+       ========================================= */
+        .container {
+            max-width: 900px;
+            margin: 150px auto 50px;
+            padding: 0 40px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .page-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(to right, #ffffff, #d65add);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .last-updated {
+            color: #9ca3af;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #e0aaff;
+            border-bottom: 1px solid rgba(128, 0, 128, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .section-content {
+            color: #d1d5db;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .section-content p {
+            margin-bottom: 15px;
+        }
+
+        .section-content ul {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        .section-content li {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: #e879f9;
+            font-weight: 600;
+        }
+
+        .contact-info {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(128, 0, 128, 0.2);
+            margin-top: 60px;
+        }
+
+        /* =========================================
+       4. MOBILE RESPONSIVE
+       ========================================= */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 20px;
+                height: 70px;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .container {
+                padding: 0 20px;
+                margin-top: 120px;
+            }
+
+            .page-title {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fixed background with dots and glow -->
+    <div class="fixed-background"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <!-- 1. Left: Logo -->
+        <div class="nav-left">
+            <div class="logo">
+                <img src="/public/logo.png" alt="Hald AI" class="logo-img">
+            </div>
+            <span class="site-name">HaldAI</span>
+        </div>
+
+        <!-- 2. Center: Links -->
+        <div class="nav-center">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/docs" class="nav-link">Docs</a>
+            <a href="/pricing" class="nav-link">Pricing</a>
+            <a href="/terms" class="nav-link">Terms</a>
+        </div>
+
+        <!-- 3. Right: Button -->
+        <div class="nav-right">
+            <a href="/signin" class="nav-btn">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <header class="page-header">
+            <h1 class="page-title">Privacy Policy</h1>
+            <p class="last-updated">Last Updated: December 1, 2025</p>
+        </header>
+
+        <section class="section">
+            <h2 class="section-title">Introduction</h2>
+            <div class="section-content">
+                <p>At Hald AI, we respect your privacy and are committed to protecting the personal information you
+                    share with us. This Privacy Policy explains how we collect, use, and safeguard your information when
+                    you use our services.</p>
+                <p>By using Hald AI, you consent to the collection and use of information in accordance with this
+                    policy.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Information We Collect</h2>
+            <div class="section-content">
+                <p>We collect information to provide better services to our users. The types of information we collect
+                    include:</p>
+                <ul>
+                    <li><span class="highlight">Personal Information:</span> When you register for an account, we may
+                        collect your name, email address, and other contact information.</li>
+                    <li><span class="highlight">Usage Data:</span> Information about how you use our services, including
+                        your interactions with our platform, pages visited, and time spent on our services.</li>
+                    <li><span class="highlight">Technical Data:</span> Information about your device, browser, operating
+                        system, IP address, and other technical details.</li>
+                    <li><span class="highlight">Cookies and Similar Technologies:</span> We use cookies and similar
+                        technologies to enhance your experience and analyze usage patterns.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">How We Use Your Information</h2>
+            <div class="section-content">
+                <p>We use the information we collect for various purposes, including:</p>
+                <ul>
+                    <li>To provide, maintain, and improve our services</li>
+                    <li>To personalize your experience with our platform</li>
+                    <li>To communicate with you about updates, promotions, and other relevant information</li>
+                    <li>To provide customer support and respond to your inquiries</li>
+                    <li>To detect, prevent, and address technical issues or security breaches</li>
+                    <li>To analyze usage patterns and improve our platform functionality</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Data Security</h2>
+            <div class="section-content">
+                <p>We implement appropriate security measures to protect your personal information against unauthorized
+                    access, alteration, disclosure, or destruction. These measures include:</p>
+                <ul>
+                    <li>Encryption of sensitive data in transit and at rest</li>
+                    <li>Secure access controls and authentication mechanisms</li>
+                    <li>Regular security audits and vulnerability assessments</li>
+                    <li>Employee training on privacy and security practices</li>
+                </ul>
+                <p>Despite our efforts, no security system is impenetrable, and we cannot guarantee the complete
+                    security of your information.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Data Sharing and Disclosure</h2>
+            <div class="section-content">
+                <p>We do not sell, trade, or rent your personal information to third parties. We may share your
+                    information in the following circumstances:</p>
+                <ul>
+                    <li><span class="highlight">Service Providers:</span> We may share your information with trusted
+                        third-party service providers who assist us in operating our services.</li>
+                    <li><span class="highlight">Legal Requirements:</span> We may disclose your information if required
+                        to do so by law or in response to valid requests by public authorities.</li>
+                    <li><span class="highlight">Protection of Rights:</span> We may share your information to protect
+                        our rights, property, or safety, or that of our users or the public.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Your Rights and Choices</h2>
+            <div class="section-content">
+                <p>You have certain rights regarding your personal information, including:</p>
+                <ul>
+                    <li>Access to your personal information we hold</li>
+                    <li>Correction of inaccurate or incomplete information</li>
+                    <li>Deletion of your personal information in certain circumstances</li>
+                    <li>Objection to processing of your personal information</li>
+                    <li>Restriction of processing of your personal information</li>
+                    <li>Data portability in certain circumstances</li>
+                </ul>
+                <p>To exercise these rights, please contact us using the information provided below.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Data Retention</h2>
+            <div class="section-content">
+                <p>We retain your personal information for as long as necessary to provide our services and comply with
+                    our legal obligations. When your information is no longer needed, we will securely delete it
+                    according to our data retention policies.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">International Transfers</h2>
+            <div class="section-content">
+                <p>Your information may be transferred to and processed in countries other than your country of
+                    residence. These countries may have data protection laws that differ from those of your
+                    jurisdiction. We take appropriate steps to ensure that your data is treated securely and in
+                    accordance with this Privacy Policy.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Children's Privacy</h2>
+            <div class="section-content">
+                <p>Our services are not intended for children under the age of 13. We do not knowingly collect personal
+                    information from children under 13. If we become aware that we have collected personal information
+                    from a child under 13, we will take steps to delete such information.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Changes to This Privacy Policy</h2>
+            <div class="section-content">
+                <p>We may update this Privacy Policy from time to time. When we do, we will post the updated policy on
+                    this page with a new "Last Updated" date. We encourage you to review this Privacy Policy
+                    periodically to stay informed about our data practices.</p>
+                <p>Your continued use of our services after any changes to this Privacy Policy constitutes your
+                    acceptance of the revised terms.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="section-content">
+                <p>If you have questions about this Privacy Policy or our data practices, please contact us:</p>
+                <div class="contact-info">
+                    <p><strong>Email:</strong> privacy@haldai.com</p>
+                    <p><strong>Mailing Address:</strong> Hald AI, Privacy Department, 123 Tech Street, San Francisco, CA
+                        94105</p>
+                    <p><strong>Attn:</strong> Privacy Officer</p>
+                </div>
+                <p>We will respond to your inquiry within 30 days.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Hald AI. Work Reimagined. All rights reserved.</p>
+        <p>This Privacy Policy is effective as of December 1, 2025.</p>
+    </footer>
+</body>
+
+</html>

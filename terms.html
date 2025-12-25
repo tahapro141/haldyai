@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms </title>
+    <link rel="shortcut icon" href="public/logo.png" type="image/x-icon">
+    <!-- Font: Inter for that clean tech look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+       1. CORE RESET & VARIABLES
+       ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* In your globals.css or a CSS module */
+        ::selection {
+            background-color: white;
+            /* Pure purple */
+            color: #800080;
+            /* Pure white text */
+            text-shadow: none;
+        }
+
+        ::-moz-selection {
+            background-color: white;
+            /* Pure purple */
+            color: #800080;
+            /* Pure white text */
+            text-shadow: none;
+        }
+
+        /* Works on Chrome, Edge, and Safari */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        /* The track (the background of the scrollbar) */
+        ::-webkit-scrollbar-track {
+            background: #000000;
+            /* A dark color that matches your page background */
+        }
+
+        /* The draggable scrolling handle */
+        ::-webkit-scrollbar-thumb {
+            background-color: #800080;
+            /* The core purple color */
+            border-radius: 20px;
+            /* Fully rounded edges */
+            border: 3px solid #1A1A1A;
+            /* Creates a nice padding effect */
+            box-shadow: 0 0 10px #000000, 0 0 5px #800080;
+            /* The purple glow */
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* Handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #800080;
+            /* A brighter purple on hover */
+            box-shadow: 0 0 15px #b19cd9, 0 0 10px #9370db;
+            /* A more intense glow */
+        }
+
+        /* Handle on active state (when you're clicking and dragging) */
+        ::-webkit-scrollbar-thumb:active {
+            background-color: #700070;
+            box-shadow: 0 0 20px #000000, 0 0 15px #b19cd9;
+        }
+
+        body {
+            background-color: #05000a;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            /* IMPORTANT: Remove any background-image lines from here */
+            background-image: none;
+        }
+
+        /* This creates the global fixed dots automatically */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -999;
+            pointer-events: none;
+            background-image:
+                radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px, 100px 100px;
+            background-position: 0 0, 25px 25px;
+        }
+
+        .fixed-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -999;
+            /* Behind everything */
+            pointer-events: none;
+
+            background-image:
+                /* 1. The Top Glow (Soft & subtle now) */
+                radial-gradient(circle at 50% -20%, rgba(120, 30, 150, 0.2) 0%, transparent 50%),
+
+                /* 2. The Dots (Clean and crisp) */
+                radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+
+            background-size: 100% 100%, 50px 50px, 100px 100px;
+            background-position: 0 0, 0 0, 25px 25px;
+        }
+
+        /* =========================================
+       2. NAVBAR (Transparent & Centered)
+       ========================================= */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 60px;
+            background: transparent;
+            z-index: 1000;
+        }
+
+        /* Left: Logo */
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .logo-img {
+            height: 32px;
+            width: auto;
+        }
+
+        .site-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #fff;
+        }
+
+        /* Center: Links */
+        .nav-center {
+            display: flex;
+            gap: 40px;
+            flex: 2;
+            justify-content: center;
+        }
+
+        .nav-link {
+            color: #a0a0a0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Right: Button */
+        .nav-right {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Use the same style as the Hero button for consistency, but smaller */
+        .nav-btn {
+            background: #ffffff;
+            color: #000000;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* =========================================
+       3. CONTENT STYLING
+       ========================================= */
+        .container {
+            max-width: 900px;
+            margin: 150px auto 50px;
+            padding: 0 40px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .page-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(to right, #ffffff, #d65add);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .last-updated {
+            color: #9ca3af;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #e0aaff;
+            border-bottom: 1px solid rgba(128, 0, 128, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .section-content {
+            color: #d1d5db;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .section-content p {
+            margin-bottom: 15px;
+        }
+
+        .section-content ul {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        .section-content li {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: #e879f9;
+            font-weight: 600;
+        }
+
+        .effective-date {
+            background: rgba(128, 0, 128, 0.15);
+            border-left: 3px solid #800080;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(128, 0, 128, 0.2);
+            margin-top: 60px;
+        }
+
+        /* =========================================
+       4. MOBILE RESPONSIVE
+       ========================================= */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 20px;
+                height: 70px;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .container {
+                padding: 0 20px;
+                margin-top: 120px;
+            }
+
+            .page-title {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fixed background with dots and glow -->
+    <div class="fixed-background"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <!-- 1. Left: Logo -->
+        <div class="nav-left">
+            <div class="logo">
+                <img src="/public/logo.png" alt="Hald AI" class="logo-img">
+            </div>
+            <span class="site-name">HaldAI</span>
+        </div>
+
+        <!-- 2. Center: Links -->
+        <div class="nav-center">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/docs" class="nav-link">Docs</a>
+            <a href="/pricing" class="nav-link">Pricing</a>
+            <a href="/policy" class="nav-link">Privacy</a>
+        </div>
+
+        <!-- 3. Right: Button -->
+        <div class="nav-right">
+            <a href="/signin" class="nav-btn">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <header class="page-header">
+            <h1 class="page-title">Terms of Service</h1>
+            <p class="last-updated">Last Updated: December 1, 2025</p>
+        </header>
+
+        <div class="effective-date">
+            <strong>Effective Date:</strong> These Terms of Service are effective immediately upon acceptance for new
+            users and will govern your use of our services going forward.
+        </div>
+
+        <section class="section">
+            <h2 class="section-title">Acceptance of Terms</h2>
+            <div class="section-content">
+                <p>By accessing or using Hald AI's services, including our website, applications, and related services
+                    (collectively, the "Services"), you acknowledge that you have read, understood, and agree to be
+                    bound by these Terms of Service (the "Terms").</p>
+                <p>If you do not agree to these Terms, you may not access or use our Services. These Terms constitute a
+                    legally binding agreement between you and Hald AI.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Description of Service</h2>
+            <div class="section-content">
+                <p>Hald AI provides a productivity and task management platform that enables users to organize their
+                    work, collaborate with others, and track projects. The Services may include various features such as
+                    kanban boards, calendars, note-taking tools, and AI-powered assistance.</p>
+                <p>We reserve the right to modify, suspend, or discontinue any aspect of our Services at any time
+                    without prior notice, though we will attempt to provide advance notice of material changes where
+                    possible.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Eligibility</h2>
+            <div class="section-content">
+                <p>You must be at least 13 years old to use our Services. By agreeing to these Terms, you represent and
+                    warrant that you are at least 13 years old and have the legal capacity to enter into this agreement.
+                </p>
+                <p>If you are using our Services on behalf of an organization, you represent and warrant that you have
+                    the authority to bind that organization to these Terms.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Account Registration</h2>
+            <div class="section-content">
+                <p>To access certain features of our Services, you may be required to create an account. When
+                    registering, you agree to provide accurate, current, and complete information about yourself.</p>
+                <p>You are responsible for maintaining the security of your account and password. You agree to accept
+                    responsibility for all activities that occur under your account.</p>
+                <p>You must notify us immediately of any unauthorized use of your account or any other breach of
+                    security.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">User Content and Conduct</h2>
+            <div class="section-content">
+                <p>You retain ownership of any content you submit, post, or display on or through our Services ("User
+                    Content"). However, by using our Services, you grant Hald AI a worldwide, non-exclusive,
+                    royalty-free license to use, reproduce, adapt, modify, publish, distribute, and display your User
+                    Content solely for the purpose of providing and improving our Services.</p>
+                <p>You agree not to:</p>
+                <ul>
+                    <li>Submit content that is unlawful, harmful, threatening, abusive, harassing, defamatory, or
+                        otherwise objectionable</li>
+                    <li>Infringe any patent, trademark, trade secret, copyright, or other intellectual property rights
+                    </li>
+                    <li>Upload or transmit viruses or other harmful computer code</li>
+                    <li>Violate the privacy or publicity rights of others</li>
+                    <li>Engage in any activity that could disable, overburden, or impair our Services</li>
+                    <li>Use any automated means to access our Services without our prior written consent</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Intellectual Property</h2>
+            <div class="section-content">
+                <p>The Services and all materials contained therein, including but not limited to software, text,
+                    graphics, logos, and designs, are the property of Hald AI and its licensors and are protected by
+                    intellectual property laws.</p>
+                <p>You may not reproduce, distribute, modify, create derivative works of, or publicly display any
+                    content from our Services without our prior written consent.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Privacy</h2>
+            <div class="section-content">
+                <p>Your privacy is important to us. Please review our <a href="/policy" class="highlight">Privacy
+                        Policy</a> to understand how we collect, use, and share information about you.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Prohibited Uses</h2>
+            <div class="section-content">
+                <p>You agree not to use our Services for any purpose that is unlawful or prohibited by these Terms. You
+                    may not use our Services:</p>
+                <ul>
+                    <li>In any way that violates any applicable law or regulation</li>
+                    <li>To transmit, or procure the sending of, any advertising or promotional material without our
+                        prior written consent</li>
+                    <li>To impersonate or attempt to impersonate Hald AI or another user</li>
+                    <li>To engage in any other conduct that restricts or inhibits anyone's use or enjoyment of our
+                        Services</li>
+                    <li>To attempt to bypass any security measures or access features not intended for you</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Fees and Payment</h2>
+            <div class="section-content">
+                <p>While some features of our Services may be offered free of charge, certain premium features may
+                    require payment. If you choose to subscribe to premium features, you agree to pay all applicable
+                    fees.</p>
+                <p>All fees are non-refundable except as required by law or as otherwise specified in these Terms. We
+                    reserve the right to change our fees at any time with advance notice to you.</p>
+                <p>You are responsible for providing accurate payment information and authorizing us to charge your
+                    payment method for all fees incurred.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Termination</h2>
+            <div class="section-content">
+                <p>We may terminate or suspend your account and access to our Services immediately, without prior
+                    notice, for any reason, including if we believe you have violated these Terms.</p>
+                <p>Upon termination, your right to use our Services will cease immediately. If you wish to terminate
+                    your account, you may simply discontinue using our Services.</p>
+                <p>All provisions of these Terms that by their nature should survive termination shall survive
+                    termination, including but not limited to ownership provisions, warranty disclaimers, and limitation
+                    of liability.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Disclaimers</h2>
+            <div class="section-content">
+                <p>Our Services are provided "as is" and "as available" without warranties of any kind, either express
+                    or implied, including but not limited to warranties of merchantability, fitness for a particular
+                    purpose, or non-infringement.</p>
+                <p>We do not warrant that our Services will be uninterrupted, secure, or error-free, or that any defects
+                    will be corrected.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Limitation of Liability</h2>
+            <div class="section-content">
+                <p>To the maximum extent permitted by law, Hald AI shall not be liable for any indirect, incidental,
+                    special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred
+                    directly or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting
+                    from your use of our Services.</p>
+                <p>Our aggregate liability to you for all claims arising out of or related to these Terms shall not
+                    exceed the amount you paid to Hald AI during the six months preceding the claim.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Indemnification</h2>
+            <div class="section-content">
+                <p>You agree to indemnify and hold harmless Hald AI, its affiliates, officers, agents, and employees
+                    from any claim or demand, including reasonable attorneys' fees, made by any third party due to or
+                    arising out of your use of our Services, your violation of these Terms, or your violation of
+                    applicable law or regulation.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Changes to These Terms</h2>
+            <div class="section-content">
+                <p>We may modify these Terms from time to time. We will notify you of material changes by posting the
+                    updated Terms on our website and updating the "Last Updated" date.</p>
+                <p>Your continued use of our Services after the effective date of any changes to these Terms constitutes
+                    your acceptance of the revised Terms.</p>
+                <p>If you do not agree to the revised Terms, you must stop using our Services.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Governing Law</h2>
+            <div class="section-content">
+                <p>These Terms shall be governed by and construed in accordance with the laws of the State of
+                    California, without regard to its conflict of law provisions. Any disputes arising under these Terms
+                    shall be resolved in the state or federal courts located in San Francisco County, California.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Severability</h2>
+            <div class="section-content">
+                <p>If any provision of these Terms is held to be invalid or unenforceable, such provision shall be
+                    struck and the remaining provisions shall remain in full force and effect.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Contact Information</h2>
+            <div class="section-content">
+                <p>If you have any questions about these Terms, please contact us:</p>
+                <div
+                    style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 25px; margin: 20px 0;">
+                    <p><strong>Email:</strong> legal@haldai.com</p>
+                    <p><strong>Mailing Address:</strong> Hald AI, Legal Department, 123 Tech Street, San Francisco, CA
+                        94105</p>
+                    <p><strong>Attn:</strong> Legal Counsel</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Hald AI. Work Reimagined. All rights reserved.</p>
+        <p>These Terms of Service are effective as of December 1, 2025.</p>
+    </footer>
+</body>
+
+</html>

@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+
+    <link rel="icon" type="image/png" href="public/logo.png">
+
+    <!-- TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ICONS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- DATABASE (IndexedDB) -->
+    <script src="js/db.js"></script>
+
+    <!-- CONFETTI -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* FADE TRANSITION */
+        #transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            transition: opacity 1.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        #transition-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+    <script src="js/config.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            const ol = document.getElementById('transition-overlay');
+            if (ol) {
+                ol.classList.add('fade-out');
+                setTimeout(() => ol.remove(), 1500);
+            }
+        });
+        // Failsafe
+        setTimeout(() => {
+            const ol = document.getElementById('transition-overlay');
+            if (ol) ol.classList.add('fade-out');
+        }, 3000);
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        bg: '#030005',
+                        sidebar: '#0a0510',
+                        surface: '#121215',
+                        border: 'rgba(255,255,255,0.06)',
+                        primary: '#bf00ff',
+                        textMuted: '#8b7d9b'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /*
+         * =========================================
+         *  THEME ENGINE: NEON VIOLET
+         * =========================================
+         */
+        :root {
+            --void: #030005;
+            --panel: #0a0510;
+            --card-bg: #120b18;
+            --border: #2a1f35;
+            --border-hover: #5d3a7e;
+            --neon: #bf00ff;
+            --neon-dim: rgba(191, 0, 255, 0.1);
+            --neon-glow: 0 0 30px rgba(191, 0, 255, 0.25);
+            --text-main: #ffffff;
+            --text-muted: #8b7d9b;
+            --danger: #ff0055;
+            --font-head: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            background: var(--void);
+            color: var(--text-main);
+            font-family: var(--font-head);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* --- SIDEBAR REFINED --- */
+        .glass-sidebar {
+            background: rgba(10, 10, 12, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 256px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            flex-shrink: 0;
+            overflow-x: hidden;
+            white-space: nowrap;
+        }
+
+        .glass-sidebar.collapsed {
+            width: 0px;
+        }
+
+        /* Smooth Text Hiding */
+        .glass-sidebar span, 
+        .glass-sidebar p, 
+        .glass-sidebar .text-xs,
+        .glass-sidebar .user-info {
+            opacity: 1;
+            transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+            width: auto;
+        }
+
+        .glass-sidebar.collapsed span, 
+        .glass-sidebar.collapsed p,
+        .glass-sidebar.collapsed .text-xs,
+        .glass-sidebar.collapsed .sidebar-username,
+        .glass-sidebar.collapsed .sidebar-email,
+        .glass-sidebar.collapsed #sidebar-plan,
+        .glass-sidebar.collapsed .ml-auto,
+        .glass-sidebar.collapsed .logo-container span {
+            opacity: 0 !important;
+            width: 0 !important;
+            margin: 0 !important;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* Smooth Item Spacing & Centering */
+        .glass-sidebar .logo-container,
+        .glass-sidebar .flex.items-center { /* Targets menu items */
+            transition: padding 0.3s ease, gap 0.3s ease;
+            gap: 0.75rem; /* gap-3 */
+        }
+        
+        .glass-sidebar .logo-container img,
+        .glass-sidebar .logo-container svg,
+        .glass-sidebar .flex.items-center img,
+        .glass-sidebar .flex.items-center svg {
+             flex-shrink: 0;
+        }
+
+        /* Collapsed State Centering */
+        .glass-sidebar.collapsed .logo-container,
+        .glass-sidebar.collapsed .flex.items-center {
+            padding-left: 28px !important; /* Centers icon (80px width) */
+            padding-right: 0 !important;
+            gap: 0 !important;
+            justify-content: flex-start !important; /* Keep start, use padding to center */
+        }
+        
+        /* Remove margin from logo image in collapsed state */
+        .glass-sidebar.collapsed .logo-container img {
+            margin-right: 0 !important;
+        }
+
+        /* Specific fix for the profile section padding */
+        .glass-sidebar.collapsed .p-4 {
+            padding: 1rem !important; /* Keep default padding */
+            padding-left: 22px !important; /* Center avatar */
+        }
+
+        .logo-container {
+            overflow: hidden;
+        }
+
+        /* Toggle Button - Refined & Positioned */
+        #sidebar-toggle-btn {
+            position: fixed;
+            top: 16px;
+            left: 272px; /* 256px (sidebar) + 16px (gap) */
+            z-index: 100;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(20, 20, 25, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8b7d9b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Adjust toggle position when sidebar is collapsed */
+        .glass-sidebar.collapsed ~ #sidebar-toggle-btn {
+            left: 16px; /* 0px (collapsed) + 16px (gap) */
+        }
+
+        #sidebar-toggle-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Adjust toggle position based on sidebar state via JS or simpler CSS if nested */
+        
+        /* Chat Scrollbar */
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(168, 85, 247, 0.2);
+            border-radius: 10px;
+        }
+        
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(168, 85, 247, 0.4);
+        }
+
+        .glass-sidebar ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .glass-sidebar ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .glass-sidebar ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        /* --- VIEWPORT --- */
+        .viewport {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--void);
+            background-image: radial-gradient(rgba(191, 0, 255, 0.15) 1px, transparent 1px);
+            background-size: 40px 40px;
+            cursor: default;
+            transition: all 0.3s ease;
+        }
+
+        .canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: 0 0;
+            will-change: transform;
+        }
+
+        /* --- HUD (styles moved to Tailwind classes) --- */
+
+        /* --- CONNECTORS --- */
+        #connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: visible;
+        }
+
+        #connections path {
+            stroke: var(--neon);
+            stroke-width: 3;
+            fill: none;
+            opacity: 0.6;
+            stroke-dasharray: none;
+            filter: drop-shadow(0 0 8px var(--neon));
+            animation: flow 20s linear infinite;
+        }
+
+        @keyframes flow {
+            from {
+                stroke-dashoffset: 1000;
+            }
+
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+
+
+        /* --- COLUMNS --- */
+        .column {
+            position: absolute;
+            width: 340px;
+            background: rgba(18, 11, 24, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+        }
+
+        .column:hover {
+            border-color: var(--border-hover);
+        }
+
+        .column.dragging {
+            z-index: 100;
+            border-color: var(--neon);
+            box-shadow: 0 0 50px var(--neon-dim);
+            cursor: grabbing;
+        }
+
+        .column-header {
+            padding: 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .col-title-input {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            width: 200px;
+            outline: none;
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .col-title-input:focus {
+            color: white;
+        }
+
+        .task-list {
+            padding: 16px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .task {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            position: relative;
+            cursor: grab;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .task::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            padding: 1px;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            pointer-events: none;
+        }
+
+        .task:hover {
+            border-color: #555;
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 10; /* Increased z-index */
+            background: #1a1024;
+        }
+
+        .task.expired {
+            border-color: var(--danger);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.15);
+        }
+
+        .task.expired .timer-badge {
+            color: var(--danger);
+            animation: pulse 2s infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        /* TOAST */
+        #toast-container {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(18, 18, 21, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.upgrade {
+            border-color: #bf00ff;
+            background: rgba(191, 0, 255, 0.1);
+        }
+
+
+        .task.completed {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .task.completed .task-title {
+            text-decoration: line-through;
+            color: #555;
+        }
+
+        .task.completed .check-circle {
+            background: var(--neon);
+            border-color: var(--neon);
+        }
+
+        .task.completed .check-circle i {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .task-header {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .check-circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #444;
+            border-radius: 50%;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .check-circle i {
+            color: #000;
+            font-size: 14px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: 0.2s;
+        }
+
+        .check-circle:hover {
+            border-color: var(--neon);
+        }
+
+        .task-title {
+            font-size: 15px;
+            line-height: 1.4;
+            color: #eee;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .timer-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .task-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .task:hover .task-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .action-btn {
+            font-size: 16px;
+            color: #555;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .action-btn:hover {
+            color: var(--text-main);
+            text-shadow: 0 0 8px white;
+        }
+
+
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal {
+            background: #0f0814;
+            border: 1px solid var(--border);
+            padding: 32px;
+            width: 420px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+            transform: scale(0.9);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h2 {
+            font-family: var(--font-mono);
+            color: var(--neon);
+            margin-bottom: 24px;
+            font-size: 20px;
+        }
+
+        .label {
+            font-size: 11px;
+            color: #666;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #1a1024;
+            border: 1px solid #333;
+            padding: 14px;
+            color: white;
+            border-radius: 8px;
+            outline: none;
+            margin-bottom: 20px;
+            font-family: var(--font-head);
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--neon);
+            box-shadow: 0 0 15px var(--neon-dim);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--neon);
+            color: white;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: var(--neon-glow);
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.2);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                transform: scaleY(1);
+            }
+
+            50% {
+                transform: scaleY(2.5);
+            }
+        }
+    </style>
+    <style>
+        /* Chat Interface Styles from chat.ht3ml */
+        .chat-card {
+            width: 100%;
+            height: 100%;
+            background: var(--surface-black);
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(168, 85, 247, 0.15);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            backdrop-filter: blur(15px);
+        }
+
+        .header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .ai-icon-box {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-purple);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .ai-icon-box svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .header h3 {
+            color: var(--text-white);
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg {
+            max-width: 82%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            font-size: 14.5px;
+            line-height: 1.5;
+            animation: msgPop 0.4s ease forwards;
+            position: relative;
+        }
+
+        @keyframes msgPop {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .ai-msg {
+            background: rgba(168, 85, 247, 0.08);
+            color: var(--text-white);
+            align-self: flex-start;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-bottom-left-radius: 5px;
+        }
+
+        .user-msg {
+            background: var(--gradient-purple);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .typing {
+            padding: 0 1.25rem 0.5rem;
+            font-size: 12px;
+            color: var(--accent-purple);
+            font-weight: 500;
+            display: none;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .dots { display: flex; gap: 3px; }
+        .dot { width: 4px; height: 4px; background: var(--accent-purple); border-radius: 50%; animation: blink 1.4s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        .input-area {
+            padding: 1rem;
+        }
+
+        .input-box {
+            background: #15151a;
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 5px 5px 5px 15px;
+            display: flex;
+            align-items: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
+            background: #1a1a22;
+        }
+
+        .input-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            flex: 1;
+            outline: none;
+            font-size: 14px;
+            height: 45px;
+        }
+
+        .send-button {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- AUTH GUARD -->
+    <script>
+            (async function () {
+                try {
+                    const res = await fetch(`${CONFIG.API_BASE_URL}/auth/check`, { credentials: 'include' });
+                    const data = await res.json();
+                    if (!data.authenticated) {
+                        localStorage.removeItem('haldai_logged_in');
+window.location.href = '/signin';
+                    } else {
+                        localStorage.setItem('haldai_logged_in', 'true');
+                    }
+                } catch (e) {
+                    console.error('Auth check failed:', e);
+                    window.location.href = '/signin';
+                }
+            })();
+    </script>
+    <div id="transition-overlay"></div>
+
+    <aside id="main-sidebar"
+        class="relative h-screen bg-sidebar/90 backdrop-blur-xl border-r border-white/10 flex flex-col z-40 glass-sidebar">
+        <div class="h-14 flex items-center px-6 border-b border-white/5 logo-container">
+            <img src="/public/logo.png" alt="Logo" class="w-6 h-6 object-contain mr-3">
+            <span class="font-bold text-base tracking-tight text-white">HALDAI OS</span>
+        </div>
+        <div class="flex-1 overflow-y-auto py-6 px-3 space-y-8">
+            <div>
+                <p class="px-3 text-xs font-bold uppercase tracking-widest mb-3" style="color: #555;">Workspace</p>
+                <div onclick="showSection('dashboard')"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm bg-white/10 text-white transition-all group cursor-pointer hover:bg-white/5">
+                    <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Dashboard
+                </div>
+                <!-- AGENT TAB (Floating Panel) -->
+                <div onclick="toggleInterface()"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-textMuted hover:text-white hover:bg-white/5 transition-all group cursor-pointer mt-1">
+                    <svg class="w-4 h-4 group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>Agent</span>
+                    <span
+                        class="ml-auto text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">AI</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between px-3 mb-2">
+                    <p class="text-xs font-bold uppercase tracking-widest" style="color: #555;">Notebooks</p>
+                    <button onclick="createNotebookFromDash()"
+                        class="hover:text-white transition-colors hover:bg-white/10 p-1 rounded" style="color: #555;">
+                        <i data-lucide="plus" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                <div id="sidebar-list" class="space-y-0.5"></div>
+            </div>
+        </div>
+
+        <div class="mt-auto border-t border-white/5 bg-[#05000a]">
+            <div class="p-4 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors group relative"
+                onclick="toggleProfileMenu()">
+                <div class="relative">
+                    <div id="user-avatar"
+                        class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center text-xs font-bold ring-2 ring-white/5 text-white overflow-hidden">
+                        <img id="sidebar-avatar-img" src="" class="w-full h-full object-cover hidden">
+                        <span id="sidebar-avatar-initial">U</span>
+                    </div>
+                </div>
+                <div class="overflow-hidden flex-1">
+                    <p id="sidebar-username" class="text-sm font-bold text-white truncate">&nbsp;</p>
+                    <p id="sidebar-email" class="text-[10px] text-textMuted truncate">&nbsp;</p>
+                </div>
+                <div id="sidebar-plan"
+                    class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-gray-800 text-gray-400 border border-gray-700">
+                    ...</div>
+
+                <div id="profile-menu"
+                    class="absolute bottom-full left-4 right-4 mb-2 bg-[#1a1024] border border-white/10 rounded-xl shadow-2xl p-2 invisible opacity-0 translate-y-2 transition-all duration-200 z-[60]">
+                    <div onclick="window.location.href='/pricing'"
+                        class="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-yellow-500 hover:bg-yellow-500/10 cursor-pointer mb-1">
+                        <i data-lucide="zap" class="w-4 h-4"></i> <span class="font-bold">Upgrade to Pro</span>
+                    </div>
+                    <div class="h-px bg-white/5 my-1"></div>
+                    <div onclick="signOut()"
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-400/10 cursor-pointer">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> <span>Sign Out</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <button onclick="toggleSidebar()" id="sidebar-toggle-btn">
+        <i class="ri-menu-line text-lg transition-transform duration-300"></i>
+    </button>
+
+    <!-- AGENT WIDGET (Floating) REMOVED -->
+
+    <div id="chat-interface" class="fixed bottom-8 right-8 w-[380px] h-[500px] bg-[#0f0f12] border
+    border-white/10 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 opacity-0 translate-y-4
+    pointer-events-none z-[1000]">
+        <div class="header">
+            <div class="ai-icon-box">
+                <!-- AI Minimalist Sparkle SVG -->
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L14.5 9L22 11.5L14.5 14L12 21L9.5 14L2 11.5L9.5 9L12 2Z" />
+                </svg>
+            </div>
+            <div>
+                <h3>haldAI</h3>
+            </div>
+            <button onclick="toggleInterface()" class="p-1 rounded-full hover:bg-white/10 text-textMuted ml-auto"><i
+    data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+
+        <div class="messages-container" id="chatWindow">
+            <div class="msg ai-msg">Hello! I am haldAI. Ready to create something incredible? 💜</div>
+        </div>
+
+        <div id="typingArea" class="typing">
+            haldAI is processing
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off">
+                <button class="send-button" id="sendBtn">
+                    <svg style="width:18px;height:18px" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- MAIN VIEWPORT -->
+    <div id="viewport" class="viewport">
+        <div class="absolute top-4 right-4 sm:top-6 sm:right-8 z-[500] pointer-events-none">
+            <div class="flex items-center gap-4 sm:gap-6 bg-black/50 backdrop-blur-md border border-white/10 rounded-xl px-4 sm:px-6 py-2 sm:py-3 shadow-2xl">
+                <div class="text-center">
+                    <span id="hud-total" class="font-mono font-bold text-lg sm:text-xl text-white">0</span>
+                    <span class="block text-[9px] sm:text-[10px] font-bold tracking-widest text-textMuted uppercase">TOTAL</span>
+                </div>
+                <div class="h-6 w-px bg-white/10"></div>
+                <div class="text-center">
+                    <span id="hud-active" class="font-mono font-bold text-lg sm:text-xl text-primary">0</span>
+                    <span class="block text-[9px] sm:text-[10px] font-bold tracking-widest text-textMuted uppercase">ACTIVE</span>
+                </div>
+                <div class="h-6 w-px bg-white/10 hidden sm:block"></div>
+                <div class="text-center hidden sm:block">
+                    <span id="hud-rate" class="font-mono font-bold text-lg sm:text-xl text-white">0%</span>
+                    <span class="block text-[9px] sm:text-[10px] font-bold tracking-widest text-textMuted uppercase">EFFICIENCY</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD CARD BUTTON -->
+        <button id="add-card-btn" onclick="createNewColumn()" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[500] bg-primary hover:bg-purple-500 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out hover:scale-105 flex items-center gap-2 pointer-events-auto">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Add Card</span>
+        </button>
+        <div id="canvas" class="canvas">
+            <svg id="connections"></svg>
+        </div>
+    </div>
+
+    <!-- UNLIMITED CARDS + DYNAMIC ADD -->
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <script>
+        function showToast(msg, type = 'normal') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = type === 'upgrade' ? `<i class="lucide-zap w-4 h-4 text-purple-400"></i> ${msg} <button onclick="window.location.href='/pricing'" class="ml-2 px-2 py-1 bg-purple-500 rounded text-[10px] font-bold">UPGRADE</button>` : msg;
+            container.appendChild(el);
+            setTimeout(() => el.classList.add('show'), 10);
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+    </script>
+
+    <!-- MODALS REMOVED (Replaced by Toasts) -->
+    <!-- EDIT MODAL ONLY -->
+    <div class="modal-overlay" id="editModal" onclick="if(event.target===this) closeModal()">
+        <div class="modal">
+            <h2>EDIT NODE</h2>
+            <label class="label">COMMAND</label>
+            <input id="editTitle" class="form-input" placeholder="Task Name">
+
+            <label class="label">TIMER DURATION</label>
+            <div class="flex gap-2 mb-4">
+                <input id="editHours" class="form-input" placeholder="Hrs" type="number" min="0">
+                <input id="editMins" class="form-input" placeholder="Mins" type="number" min="0" max="59">
+            </div>
+            <!-- Old input removed -->
+            <!-- <input id="editDuration" class="form-input" placeholder="e.g. 23 hours, 30 mins (Leave empty for none)"> -->
+
+            <button class="btn-primary" onclick="saveTaskEdit()">SAVE CHANGES</button>
+        </div>
+    </div>
+
+    <!-- WELCOME MODAL -->
+    <div class="modal-overlay" id="welcomeModal">
+        <div class="modal" style="width: 500px; text-align: center;">
+            <h2 style="margin-bottom: 10px;">WELCOME TO HALDAI OS</h2>
+            <p style="color: #ccc; margin-bottom: 25px; font-size: 14px;">Your new command center for deep work.</p>
+            
+            <div style="text-align: left; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <i class="ri-layout-masonry-line" style="color: var(--neon); font-size: 20px;"></i>
+                    <div>
+                        <strong style="color: white; display: block; font-size: 14px;">Focus Cards</strong>
+                        <span style="color: #666; font-size: 12px;">Organise tasks into drag-and-drop cards.</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <i class="ri-book-3-line" style="color: var(--neon); font-size: 20px;"></i>
+                    <div>
+                        <strong style="color: white; display: block; font-size: 14px;">Notebooks</strong>
+                        <span style="color: #666; font-size: 12px;">Capture thoughts instantly in the sidebar.</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <i class="ri-robot-line" style="color: var(--neon); font-size: 20px;"></i>
+                    <div>
+                        <strong style="color: white; display: block; font-size: 14px;">AI Agent</strong>
+                        <span style="color: #666; font-size: 12px;">Your productivity partner. Ask it anything.</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="closeWelcomeModal()">GET STARTED</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Self-contained IndexedDB logic for Layout ---
+        const layoutDB = (() => {
+            let db;
+            const DB_NAME = 'HaldaiLayoutDB';
+            const STORE_NAME = 'columns';
+            const DB_VERSION = 1;
+
+            async function init() {
+                return new Promise((resolve, reject) => {
+                    if (db) {
+                        return resolve(db);
+                    }
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                    request.onupgradeneeded = (event) => {
+                        const dbInstance = event.target.result;
+                        if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+                            dbInstance.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                    };
+
+                    request.onsuccess = (event) => {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+
+                    request.onerror = (event) => {
+                        console.error('LayoutDB error:', event.target.error);
+                        reject(event.target.error);
+                    };
+                });
+            }
+
+            async function get(id) {
+                await init();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get(id);
+                    request.onsuccess = () => {
+                        resolve(request.result);
+                    };
+                    request.onerror = (event) => {
+                        reject(event.target.error);
+                    };
+                });
+            }
+
+            async function save(item) {
+                await init();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.put(item);
+                    request.onsuccess = () => {
+                        resolve(item);
+                    };
+                    request.onerror = (event) => {
+                        reject(event.target.error);
+                    };
+                });
+            }
+
+            return { init, get, save };
+        })();
+
+
+        // --- COLUMN PERSISTENCE ---
+        async function saveColumnLayout() {
+            console.log('Attempting to save column layout...');
+            try {
+                const layout = state.columns.map(c => ({ id: c.id, title: c.title, x: c.x, y: c.y }));
+                // We'll save the whole layout as a single object with a fixed key.
+                await layoutDB.save({ id: 'main-layout', data: layout });
+                console.log('Column layout saved successfully.');
+            } catch (e) {
+                console.error("Failed to save column layout:", e);
+            }
+        }
+
+        async function loadColumnLayout() {
+            console.log('Attempting to load column layout...');
+            try {
+                const savedState = await layoutDB.get('main-layout');
+                if (savedState && savedState.data && savedState.data.length > 0) {
+                    const layout = savedState.data;
+                    // Update state with loaded positions, but keep existing tasks
+                    layout.forEach(savedCol => {
+                        const existingCol = state.columns.find(c => c.id === savedCol.id);
+                        if (existingCol) {
+                            existingCol.x = savedCol.x;
+                            existingCol.y = savedCol.y;
+                            existingCol.title = savedCol.title;
+                        } else {
+                            // If a column was saved but isn't in the default state, add it.
+                            state.columns.push({ ...savedCol, tasks: [] });
+                        }
+                    });
+                    // Remove default columns that are not in the saved layout
+                    state.columns = state.columns.filter(c => layout.some(sc => sc.id === c.id));
+                    console.log('Column layout loaded successfully.');
+                } else {
+                    console.log('No saved column layout found.');
+                }
+            } catch (e) {
+                console.error("Failed to load column layout:", e);
+            }
+        }
+
+
+        // --- LOGIC ---
+        let state = {
+            scale: 1, panX: 0, panY: 0,
+            columns: [
+                { id: 'c1', title: 'OPERATIONS', x: 100, y: 150, tasks: [] },
+                { id: 'c2', title: 'DEPLOYMENT', x: 550, y: 150, tasks: [] }
+            ],
+            user: { plan: 'free' }
+        };
+
+        let editing = null;
+        let notes = [];
+
+        // INIT
+        (async () => {
+            // 1. Wait for DBs to be ready
+            await Promise.all([DB.init(), layoutDB.init()]);
+
+            // 2. Auth Check (Server side)
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/auth/check`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.authenticated) {
+                    state.user = data.user; // Update State User!
+                    state.user.plan = data.plan || 'free';
+                    updateProfileUI(); // Update UI immediately
+                } else {
+                    localStorage.removeItem('haldai_logged_in');
+                    window.location.href = '/signin';
+                }
+            } catch (e) {
+                console.error('Auth check failed:', e);
+            }
+
+            // 3. Load Data
+            initSidebar();
+            initDashboard();
+        })();
+
+        // PWA Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if(modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 200);
+            }
+            localStorage.setItem('haldai_visited', 'true');
+        }
+
+        function checkWelcome() {
+            if (!localStorage.getItem('haldai_visited')) {
+                const modal = document.getElementById('welcomeModal');
+                if(modal) {
+                    modal.style.display = 'flex';
+                    setTimeout(() => modal.classList.add('active'), 100);
+                }
+            }
+        }
+
+        async function initDashboard() {
+            checkWelcome();
+            // Load custom column layout first
+            await loadColumnLayout();
+
+            // Load Tasks from IndexedDB for the authenticated user
+            const userEmail = state.user?.email || null;
+            const dbTasks = await DB.getTasks(userEmail);
+            if (dbTasks.length === 0) {
+                // Tutorial Task logic?
+            } else {
+                // Map tasks to columns
+                state.columns.forEach(col => col.tasks = []);
+                dbTasks.forEach(t => {
+                    const c = state.columns.find(col => col.id === t.column_id);
+                    // If a task's column was deleted, add it to the first column as a fallback
+                    const targetCol = c || state.columns[0];
+                    if (targetCol) {
+                        targetCol.tasks.push(t);
+                    }
+                });
+            }
+            render();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('collapsed');
+            updateLayoutForSidebar();
+        }
+
+        async function initSidebar() {
+            // On small screens, ensure the sidebar starts collapsed.
+            if (window.innerWidth < 768) {
+                document.querySelector('aside').classList.add('collapsed');
+            }
+            updateLayoutForSidebar(); // Set initial state of layout
+            lucide.createIcons();
+            fetchNotes();
+        }
+
+        function updateLayoutForSidebar() {
+            const sidebar = document.querySelector('aside');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+
+            if (!sidebar || !toggleBtn) return;
+
+            const icon = toggleBtn.querySelector('i');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                if(icon) icon.classList.remove('rotate-180');
+            } else {
+                if(icon) icon.classList.add('rotate-180');
+            }
+        }
+
+        async function fetchNotes() {
+            // Load Notes from IndexedDB for the authenticated user
+            const userEmail = state.user?.email || null;
+            const data = await DB.getNotebooks(userEmail);
+            notes = data || [];
+            renderSidebarList();
+        }
+
+        function renderSidebarList() {
+            const list = document.getElementById('sidebar-list');
+            if (!list) return;
+            list.innerHTML = notes.map(note => `
+                <a href="/notebook?note=${note.id}"
+                     class="flex items-center gap-3 px-3 py-1.5 rounded-lg cursor-pointer transition-colors group text-textMuted hover:text-white hover:bg-white/5 decoration-0">
+                    <i data-lucide="file-text" class="w-4 h-4 transition-transform group-hover:scale-110"></i>
+                    <span class="text-sm truncate font-medium flex-1">${note.title || 'Untitled'}</span>
+                    <i onclick="event.preventDefault(); deleteNotebook('${note.id}')" data-lucide="trash-2" class="w-3 h-3 text-red-500/50 hover:text-red-500 hidden group-hover:block transition-colors"></i>
+                </a>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function updateProfileUI() {
+            document.getElementById('sidebar-username').innerText = state.user.name || 'User';
+            document.getElementById('sidebar-email').innerText = state.user.email || '';
+
+            const badge = document.getElementById('sidebar-plan');
+            badge.innerText = state.user.plan.toUpperCase();
+            if (state.user.plan === 'pro') badge.className = "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30";
+            if (state.user.plan === 'obsessed') badge.className = "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30";
+
+            if (state.user.picture) {
+                document.getElementById('sidebar-avatar-img').src = state.user.picture;
+                document.getElementById('sidebar-avatar-img').classList.remove('hidden');
+                document.getElementById('sidebar-avatar-initial').classList.add('hidden');
+            }
+        }
+
+        // --- COLUMN & NOTEBOOK HELPERS ---
+        async function createNewColumn() {
+            if (!checkTier('new_card')) {
+                showToast("Create more than 3 cards with a Pro plan.", "upgrade");
+                return;
+            }
+            // Find rightmost position
+            let maxX = 100;
+            state.columns.forEach(c => { maxX = Math.max(maxX, c.x + 360); });
+
+            const newCol = {
+                id: 'c' + Date.now(),
+                title: 'NEW SECTION',
+                x: maxX + 50, // Space out dynamic
+                y: 150,
+                tasks: []
+            };
+            state.columns.push(newCol);
+            render();
+            await saveColumnLayout();
+        }
+
+        async function deleteNotebook(id) {
+            if (confirm("Delete this notebook PERMANENTLY?")) {
+                await DB.deleteNotebook(id);
+                await fetchNotes(); // reload
+                showToast("Notebook deleted", "normal");
+            }
+        }
+
+        async function renameCol(id, val) {
+            const col = state.columns.find(c => c.id === id);
+            if (col) {
+                col.title = val;
+                await saveColumnLayout();
+            }
+        }
+
+        async function deleteCol(id) {
+            if (confirm("Delete column?")) {
+                state.columns = state.columns.filter(c => c.id !== id);
+                render();
+                await saveColumnLayout();
+            }
+        }
+
+        // --- DASHBOARD ACTIONS ---
+        function render() {
+            const canvas = document.getElementById('canvas');
+            canvas.style.transform = `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${state.scale})`;
+
+            // More efficient clear and rebuild using a document fragment
+            const fragment = document.createDocumentFragment();
+
+            // Unlimited Scroll Fix
+            let maxX = 0;
+            state.columns.forEach(col => { maxX = Math.max(maxX, col.x + 400); });
+            canvas.style.width = Math.max(window.innerWidth, maxX) + 'px';
+
+            state.columns.forEach(col => {
+                const colEl = document.createElement('div');
+                colEl.className = 'column';
+                colEl.id = col.id;
+                colEl.style.left = col.x + 'px';
+                colEl.style.top = col.y + 'px';
+                colEl.innerHTML = `
+                   <div class="column-header" onmousedown="startDrag(event, 'col', '${col.id}')">
+                        <input class="col-title-input" value="${col.title}" oninput="renameCol('${col.id}', this.value)">
+                        <i class="ri-close-circle-line" style="color:#444; cursor:pointer;" onclick="deleteCol('${col.id}')"></i>
+                    </div>
+                    <div class="task-list"></div>
+                    <div style="padding:0 16px 16px">
+                        <button class="btn-primary" style="padding:10px; font-size:11px; background:rgba(255,255,255,0.03); border:1px dashed #333; color:#666; box-shadow:none; letter-spacing:1px;" onclick="addTask('${col.id}')">+ ADD NODE</button>
+                    </div>
+                `;
+                const list = colEl.querySelector('.task-list');
+
+                col.tasks.forEach(t => {
+                    const time = getTimeData(t.due_date, t.status === 'done');
+                    const div = document.createElement('div');
+                    div.className = `task ${t.status === 'done' ? 'completed' : ''} ${time.expired ? 'expired' : ''}`;
+                    div.id = t.id;
+                    div.setAttribute('data-due-date', t.due_date || '');
+                    div.onmousedown = (e) => startDrag(e, 'task', t.id, col.id);
+                    div.innerHTML = `
+                        <div class="task-header">
+                            <div class="check-circle" onclick="toggleComplete('${col.id}', '${t.id}')"><i class="ri-check-line"></i></div>
+                            <div class="task-title">${t.title}</div>
+                        </div>
+                        <div class="task-footer">
+                            <div class="timer-badge"><i class="${time.icon}"></i> ${time.text}</div>
+                            <div class="task-actions">
+                                <i class="ri-edit-line action-btn" onclick="openEditModal('${col.id}', '${t.id}')"></i>
+                                <i class="ri-delete-bin-line action-btn" onclick="deleteTask('${col.id}', '${t.id}')"></i>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+
+                fragment.appendChild(colEl);
+            });
+
+            // Clear Columns and append fragment
+            const cols = document.querySelectorAll('.column');
+            cols.forEach(c => c.remove());
+            canvas.appendChild(fragment);
+
+            drawLines();
+            updateHUD();
+        }
+
+        // TIER CHECK - Complete Plan-Based Feature Restrictions
+        function checkTier(feature) {
+            const plan = state.user?.plan || 'free';
+
+            if (plan === 'obsessed') return true; // Obsessed plan has all features
+
+            if (plan === 'pro') {
+                // Pro plan restrictions
+                switch (feature) {
+                    case 'ai': // AI features are for obsessed only
+                        return false;
+                    default:
+                        return true;
+                }
+            }
+
+            if (plan === 'free') {
+                // Free plan restrictions
+                switch (feature) {
+                    case 'new_card':
+                        return state.columns.length < 3; // Max 3 cards
+                    case 'new_notebook':
+                        return notes.length < 1; // Max 1 notebook
+                    case 'ai': // AI features only for obsessed
+                    case 'timers': // Timers only for pro+
+                        return false;
+                    case 'task_limit':
+                        // Check task limit per column for free users
+                        return false; // This will be handled in addTask function separately
+                    default:
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        function showUpgradeModal(msg = 'You need to upgrade to access this feature.') {
+            const plan = state.user.plan;
+            const title = document.getElementById('upgrade-title');
+            const message = document.getElementById('upgrade-msg');
+
+            if (plan === 'pro') {
+                title.innerText = "Upgrade to Obsessed";
+                message.innerText = "Unlock unlimited notebooks and neural power.";
+            } else {
+                title.innerText = "Upgrade to Pro";
+                message.innerText = "Unlock more tasks and notebooks.";
+            }
+            document.getElementById('upgrade-modal').classList.add('active');
+        }
+
+        async function createNotebookFromDash(titleOverride = null, redirect = true) {
+            if (!checkTier('new_notebook')) {
+                showToast("Create more than 1 notebook with a Pro plan.", "upgrade");
+                return;
+            }
+            const newNote = {
+                id: 'note-' + Date.now(),
+                title: titleOverride || 'Untitled Page',
+                content: '<p></p>',
+                created_at: new Date().toISOString()
+            };
+            await DB.saveNotebook(newNote);
+            // Refresh the notes list to show the new notebook in the sidebar
+            await fetchNotes();
+            
+            if (redirect) {
+                window.location.href = `/notebook?note=${newNote.id}`;
+            } else {
+                showToast("Notebook created in sidebar", "normal");
+            }
+        }
+
+        async function addTask(colId) {
+            const col = state.columns.find(c => c.id === colId);
+            if (!col) return;
+
+            const plan = state.user?.plan || 'free';
+            if (plan === 'free' && col.tasks.length >= 2) {
+                showToast("Create more than 2 tasks per card with a Pro plan.", "upgrade");
+                return;
+            }
+
+            const newTask = {
+                id: 'task-' + Date.now(),
+                column_id: colId,
+                title: 'New Command',
+                status: 'todo',
+                due_date: null,
+                timer_duration: null // Storing duration string if needed
+            };
+            await DB.saveTask(newTask);
+
+            col.tasks.push(newTask);
+            render();
+
+            // Open edit immediately
+            openEditModal(colId, newTask.id);
+        }
+
+        async function deleteTask(cid, tid) {
+            if (confirm("Delete task?")) {
+                await DB.deleteTask(tid);
+                const col = state.columns.find(c => c.id === cid);
+                col.tasks = col.tasks.filter(t => t.id !== tid);
+                render();
+            }
+        }
+
+        async function toggleComplete(cid, tid) {
+            const col = state.columns.find(c => c.id === cid);
+            const t = col.tasks.find(i => i.id === tid);
+            t.status = t.status === 'done' ? 'todo' : 'done';
+            await DB.saveTask(t);
+            render();
+        }
+
+        // EDIT & TIMER - ALWAYS SHOW MODAL
+        function openEditModal(cid, tid) {
+            editing = { cid, tid };
+            const col = state.columns.find(c => c.id === cid);
+            if (!col) {
+                console.error('Column not found:', cid);
+                return;
+            }
+            const t = col.tasks.find(i => i.id === tid);
+            if (!t) {
+                console.error('Task not found:', tid);
+                return;
+            }
+
+            // Set values
+            document.getElementById('editTitle').value = t.title;
+
+            // Parse existing timer to hours/mins
+            let hours = 0, mins = 0;
+            if (t.due_date) {
+                const remaining = new Date(t.due_date) - new Date();
+                if (remaining > 0) {
+                    hours = Math.floor(remaining / 3600000);
+                    mins = Math.floor((remaining % 3600000) / 60000);
+                }
+            }
+
+            document.getElementById('editHours').value = hours;
+            document.getElementById('editMins').value = mins;
+
+            // Show modal with transition
+            const modal = document.getElementById('editModal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+
+            console.log('✅ Edit modal opened for:', t.title);
+        }
+
+        async function saveTaskEdit() {
+            const saveBtn = document.querySelector('#editModal .btn-primary');
+            saveBtn.disabled = true;
+
+            const t = state.columns.find(c => c.id === editing.cid).tasks.find(i => i.id === editing.tid);
+            t.title = document.getElementById('editTitle').value;
+
+            // New Split Timer Logic
+            const h = parseInt(document.getElementById('editHours').value) || 0;
+            const m = parseInt(document.getElementById('editMins').value) || 0;
+
+            if (h > 0 || m > 0) {
+                if (checkTier('timers')) {
+                    const totalMs = (h * 3600 * 1000) + (m * 60 * 1000);
+                    t.due_date = new Date(Date.now() + totalMs).toISOString();
+                } else {
+                    t.due_date = null;
+                    showToast("Timers are a Pro feature.", "upgrade");
+                }
+            } else {
+                t.due_date = null;
+            }
+
+            await DB.saveTask(t);
+
+            // Surgical DOM update
+            const taskElement = document.getElementById(t.id);
+            if (taskElement) {
+                const time = getTimeData(t.due_date, t.status === 'done');
+
+                taskElement.className = `task ${t.status === 'done' ? 'completed' : ''} ${time.expired ? 'expired' : ''}`;
+                taskElement.setAttribute('data-due-date', t.due_date || '');
+
+                taskElement.innerHTML = `
+                    <div class="task-header">
+                        <div class="check-circle" onclick="toggleComplete('${t.column_id}', '${t.id}')"><i class="ri-check-line"></i></div>
+                        <div class="task-title">${t.title}</div>
+                    </div>
+                    <div class="task-footer">
+                        <div class="timer-badge"><i class="${time.icon}"></i> ${time.text}</div>
+                        <div class="task-actions">
+                            <i class="ri-edit-line action-btn" onclick="openEditModal('${t.column_id}', '${t.id}')"></i>
+                            <i class="ri-delete-bin-line action-btn" onclick="deleteTask('${t.column_id}', '${t.id}')"></i>
+                        </div>
+                    </div>
+                `;
+            }
+
+            drawLines();
+            updateHUD();
+            closeModal();
+        }
+
+        function parseDuration(str) {
+            // Regex for numbers
+            const num = parseInt(str.replace(/\D/g, ''));
+            if (!num) return 0;
+
+            const lower = str.toLowerCase();
+            if (lower.includes('h')) return num * 3600 * 1000;
+            if (lower.includes('m')) return num * 60 * 1000;
+            if (lower.includes('s')) return num * 1000;
+            // Default to min? User said "if he write min then it show min"
+            // "write 23 hour... write min"
+            // Let's assume default is minutes if no unit found? Or seconds?
+            // "show in sec bro ok" -> Countdown shows in sec.
+            // Let's assume minutes default for safety or 0
+            if (str.trim().match(/^\d+$/)) return num * 1000; // Seconds default per "show in sec"? Or stick to explicit units.
+            return 0;
+        }
+        function closeModal(callback) {
+            const modal = document.getElementById('editModal');
+            modal.classList.remove('active');
+
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Also re-enable the save button for next time
+                const saveBtn = document.querySelector('#editModal .btn-primary');
+                if (saveBtn) saveBtn.disabled = false;
+
+                if (callback && typeof callback === 'function') {
+                    callback();
+                }
+            }, 200); // Must match CSS transition duration
+
+            editing = null;
+        }
+
+        /* TIMER HELPER */
+        function getTimeData(deadline, completed) {
+            if (completed) return { text: "DONE", icon: "ri-checkbox-circle-line", expired: false };
+            if (!deadline) return { text: "NO TIMER", icon: "ri-time-line", expired: false };
+
+            const diff = new Date(deadline) - new Date();
+            if (diff <= 0) return { text: "OVERDUE", icon: "ri-alarm-warning-line", expired: true };
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            if (days > 0) return { text: `${days}d ${h}h`, icon: "ri-calendar-line", expired: false };
+            if (h > 0) return { text: `${h}h ${m}m`, icon: "ri-timer-line", expired: false };
+            if (m > 0) return { text: `${m}m ${s}s`, icon: "ri-timer-line", expired: false };
+            return { text: `${s}s`, icon: "ri-timer-flash-line", expired: false };
+        }
+        // 1 Second Ticker (from old-dashboard)
+        setInterval(() => {
+            document.querySelectorAll('.task[data-due-date]').forEach(taskEl => {
+                const col = state.columns.find(c => c.tasks.some(t => t.id === taskEl.id));
+                if (!col) return;
+                const task = col.tasks.find(t => t.id === taskEl.id);
+                if (!task) return;
+
+                const time = getTimeData(task.due_date, task.status === 'done');
+                const badge = taskEl.querySelector('.timer-badge');
+                if (badge) {
+                    const newContent = `<i class="${time.icon}"></i> ${time.text}`;
+                    if (badge.innerHTML !== newContent) badge.innerHTML = newContent;
+                }
+
+                const isExpired = taskEl.classList.contains('expired');
+                const shouldBeExpired = time.expired;
+
+                if (shouldBeExpired && !isExpired) {
+                    taskEl.classList.add('expired');
+                } else if (!shouldBeExpired && isExpired) {
+                    taskEl.classList.remove('expired');
+                }
+            });
+        }, 1000);
+
+        // DRAG & DROP - INSTANT MOVEMENT WITH CURSOR
+        let drag = { active: false, type: null, item: null, elem: null, ghost: null, startX: 0, startY: 0, initialX: 0, initialY: 0, offsetX: 0, offsetY: 0 };
+
+        window.startDrag = function (e, type, id, parentId) {
+            if (e.target.tagName === 'INPUT' || e.target.closest('.action-btn') || e.target.closest('.check-circle') || e.target.tagName === 'BUTTON') return;
+            e.stopPropagation(); e.preventDefault();
+            drag.active = true; drag.type = type; drag.startX = e.clientX; drag.startY = e.clientY;
+
+            if (type === 'col') {
+                const col = state.columns.find(c => c.id === id);
+                drag.item = col; drag.elem = document.getElementById(id);
+                drag.elem.classList.add('dragging');
+                drag.initialX = col.x;
+                drag.initialY = col.y;
+                // No transition during drag for instant movement
+                drag.elem.style.transition = 'none';
+            } else {
+                drag.item = { id, parentId };
+                const original = document.getElementById(id);
+                drag.ghost = original.cloneNode(true);
+                drag.ghost.style.position = 'fixed';
+                drag.ghost.style.width = original.offsetWidth + 'px';
+                drag.ghost.style.zIndex = 9999;
+                drag.ghost.style.pointerEvents = 'none';
+                drag.ghost.style.opacity = '0.9';
+                drag.ghost.style.transform = 'rotate(2deg)';
+                drag.ghost.style.boxShadow = '0 20px 50px rgba(0,0,0,0.5)';
+                drag.ghost.style.transition = 'none'; // No transitions for instant  movement
+                const rect = original.getBoundingClientRect();
+                drag.offsetX = e.clientX - rect.left;
+                drag.offsetY = e.clientY - rect.top;
+                drag.ghost.style.left = (e.clientX - drag.offsetX) + 'px';
+                drag.ghost.style.top = (e.clientY - drag.offsetY) + 'px';
+                document.body.appendChild(drag.ghost);
+                original.style.opacity = '0.3';
+            }
+        }
+        // --- GESTURES (Pinch Zoom & Touch Drag) ---
+        let initialPinch = 0;
+        let lastTouchX = 0, lastTouchY = 0;
+
+        const viewport = document.getElementById('viewport');
+
+        viewport.addEventListener('touchstart', e => {
+            if (e.touches.length === 2) {
+                // Pinch Start
+                initialPinch = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+            } else if (e.touches.length === 1) {
+                // Pan/Drag Start
+                if (e.target.closest('.card-header')) return; // let drag logic handle cards separately if integrated
+                pan.active = true;
+                pan.startX = e.touches[0].clientX - state.panX;
+                pan.startY = e.touches[0].clientY - state.panY;
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchmove', e => {
+            // Pinch Zoom
+            if (e.touches.length === 2 && initialPinch > 0) {
+                e.preventDefault();
+                const dist = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                const zoomSpeed = 0.005;
+                state.scale = Math.min(Math.max(0.4, state.scale + (dist - initialPinch) * zoomSpeed), 2);
+                initialPinch = dist;
+                render();
+            }
+            // Pan
+            else if (e.touches.length === 1 && pan.active) {
+                // e.preventDefault(); // blocks scroll?
+                state.panX = e.touches[0].clientX - pan.startX;
+                state.panY = e.touches[0].clientY - pan.startY;
+                render();
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchend', () => {
+            initialPinch = 0;
+            pan.active = false;
+        });
+
+        // Mouse Events - INSTANT MOVEMENT
+        window.addEventListener('mousemove', e => {
+            if (!drag.active) return;
+            if (drag.type === 'col') {
+                // INSTANT POSITION UPDATE
+                const newX = drag.initialX + (e.clientX - drag.startX) / state.scale;
+                const newY = drag.initialY + (e.clientY - drag.startY) / state.scale;
+
+                // Update state AND DOM instantly
+                drag.item.x = newX;
+                drag.item.y = newY;
+                drag.elem.style.left = newX + 'px';
+                drag.elem.style.top = newY + 'px';
+
+                // Update SVG lines
+                drawLines();
+            } else if (drag.ghost) {
+                drag.ghost.style.left = (e.clientX - drag.offsetX) + 'px';
+                drag.ghost.style.top = (e.clientY - drag.offsetY) + 'px';
+            }
+        });
+        window.addEventListener('mouseup', async e => {
+            if (!drag.active) return;
+            if (drag.type === 'col') {
+                drag.elem.classList.remove('dragging');
+                // Restore transitions after drag
+                drag.elem.style.transition = '';
+                await saveColumnLayout(); // Persist new position
+            } else if (drag.ghost) {
+                drag.ghost.remove(); drag.ghost = null;
+                const original = document.getElementById(drag.item.id);
+                if (original) original.style.opacity = '1';
+                const elements = document.elementsFromPoint(e.clientX, e.clientY);
+                const colEl = elements.find(el => el.classList.contains('column'));
+                if (colEl && colEl.id !== drag.item.parentId) {
+                    const taskId = drag.item.id;
+                    const sourceCol = state.columns.find(c => c.id === drag.item.parentId);
+                    const targetCol = state.columns.find(c => c.id === colEl.id);
+                    const tIdx = sourceCol.tasks.findIndex(t => t.id === taskId);
+                    const [t] = sourceCol.tasks.splice(tIdx, 1);
+                    t.column_id = colEl.id;
+                    targetCol.tasks.push(t);
+                    render();
+                    await DB.saveTask(t);
+                }
+            }
+            drag.active = false;
+        });
+
+        // VIEWPORT PAN/ZOOM
+        let pan = { active: false, startX: 0, startY: 0 };
+        document.getElementById('viewport').addEventListener('mousedown', e => {
+            // Allow panning on viewport, canvas, or connections (lines)
+            // Block panning if clicking on a column, task, or interactive element
+            if (e.target.closest('.column') || e.target.closest('.task') || e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') {
+                return;
+            }
+
+            if (e.button === 0 || e.button === 1 || e.code === 'Space') {
+                pan.active = true;
+                pan.startX = e.clientX - state.panX;
+                pan.startY = e.clientY - state.panY;
+                document.body.style.cursor = 'grabbing';
+            }
+        });
+        window.addEventListener('mousemove', e => {
+            if (pan.active) { 
+                state.panX = e.clientX - pan.startX; 
+                state.panY = e.clientY - pan.startY; 
+                render(); 
+            }
+        });
+        window.addEventListener('mouseup', () => {
+            pan.active = false;
+            document.body.style.cursor = 'default';
+        });
+        window.addEventListener('wheel', e => {
+            if (e.ctrlKey || e.metaKey || e.altKey) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.05 : 0.05;
+                state.scale = Math.min(Math.max(0.4, state.scale + delta), 2);
+                render();
+            }
+        }, { passive: false });
+
+        // DRAW LINES
+        function drawLines() {
+            const svg = document.getElementById('connections');
+            if (!svg) return;
+
+            // Sort columns by horizontal position before drawing lines
+            const sortedColumns = [...state.columns].sort((a, b) => a.x - b.x);
+
+            let paths = '';
+            for (let i = 0; i < sortedColumns.length - 1; i++) {
+                const c1 = sortedColumns[i];
+                const c2 = sortedColumns[i + 1];
+                const startX = c1.x + 340; // Right side of the column
+                const startY = c1.y + 48; // Vertically centered on the header
+                const endX = c2.x;       // Left side of the column
+                const endY = c2.y + 48; // Vertically centered on the header
+                const dist = Math.abs(endX - startX) / 2;
+                paths += `<path d="M ${startX} ${startY} C ${startX + dist} ${startY}, ${endX - dist} ${endY}, ${endX} ${endY}" />`;
+            }
+            svg.innerHTML = paths;
+        }
+
+        function updateHUD() {
+            let total = 0; let active = 0;
+            state.columns.forEach(c => { total += c.tasks.length; active += c.tasks.filter(t => t.status !== 'done').length; });
+            document.getElementById('hud-total').innerText = total;
+            document.getElementById('hud-active').innerText = active;
+        }
+
+                // --- ENHANCED AGENT WIDGET LOGIC ---
+
+                let isInterfaceOpen = false;
+                let chatHistory = [];
+
+                function toggleInterface() {
+                    const chatInterface = document.getElementById('chat-interface');
+                    isInterfaceOpen = !isInterfaceOpen;
+                    if (isInterfaceOpen) {
+                        chatInterface.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+                        // Focus input
+                        setTimeout(() => document.getElementById('userInput').focus(), 100);
+                    } else {
+                        chatInterface.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+                    }
+                }
+
+                document.getElementById('sendBtn').addEventListener('click', sendMessage);
+                document.getElementById('userInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
+
+                function createMessage(text, type, isSystem = false) {
+                    const chatWindow = document.getElementById('chatWindow');
+                    const div = document.createElement('div');
+                    
+                    if (isSystem) {
+                        div.className = 'msg system-msg';
+                        div.innerHTML = `<div class="system-icon">⚡</div><div class="system-content">${text}</div>`;
+                        chatWindow.appendChild(div);
+                        chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+                    } else {
+                        div.className = `msg ${type === 'user' ? 'user-msg' : 'ai-msg'}`;
+                        chatWindow.appendChild(div);
+                        
+                        if (type === 'agent') {
+                            // Typing animation
+                            let i = 0;
+                            const speed = 15; // Speed in ms
+                            // Basic markdown-ish formatting for line breaks
+                            const formattedText = text.replace(/\n/g, '<br>');
+                            
+                            // We will use a temp div to parse HTML tags so we don't break them during typing
+                            // Simplified approach: Just type raw text for now, or handle <br> specially.
+                            // For smoother experience with HTML content, we might dump it all at once if it contains tags, 
+                            // or use a more complex typewriter. 
+                            // Let's stick to a simple character typer that respects <br> as a single "char" or handles plain text.
+                            
+                            if (text.includes('<') && text.includes('>')) {
+                                // If rich HTML, just show it (animations break HTML structure easily)
+                                div.innerHTML = formattedText;
+                                chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+                            } else {
+                                function typeWriter() {
+                                    if (i < text.length) {
+                                        if (text.substring(i, i+4) === '<br>') {
+                                            div.innerHTML += '<br>';
+                                            i += 4;
+                                        } else {
+                                            div.innerHTML += text.charAt(i);
+                                            i++;
+                                        }
+                                        chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+                                        setTimeout(typeWriter, speed);
+                                    }
+                                }
+                                typeWriter();
+                            }
+                        } else {
+                            // User message is instant
+                            div.innerHTML = text.replace(/\n/g, '<br>');
+                            chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+                        }
+                    }
+                }
+
+                async function sendMessage() {
+                    const userInput = document.getElementById('userInput');
+                    const chatWindow = document.getElementById('chatWindow');
+                    const typingArea = document.getElementById('typingArea');
+                    const val = userInput.value.trim();
+                    if (!val) return;
+
+                    createMessage(val, 'user');
+                    chatHistory.push({ role: 'user', content: val });
+                    userInput.value = '';
+                    
+                    if(typingArea) typingArea.style.display = 'flex';
+                    if(chatWindow) chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+
+                    try {
+                        const res = await fetch(`${CONFIG.API_BASE_URL}/api/agent`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                input_text: val,
+                                dashboard_state: {
+                                    columns: state.columns,
+                                    notebooks: notes,
+                                    chat_history: chatHistory,
+                                    user_plan: state.user.plan,
+                                    user_name: state.user.name
+                                }
+                            })
+                        });
+
+                        if(typingArea) typingArea.style.display = 'none';
+
+                        if (!res.ok) throw new Error(`API error: ${res.status}`);
+                        const data = await res.json();
+                        if (data.error) throw new Error(data.error);
+
+                        // 1. Show Text Response
+                        if (data.text) {
+                            createMessage(data.text, 'agent');
+                            chatHistory.push({ role: 'agent', content: data.text });
+                        }
+
+                        // 2. Process Commands
+                        if (data.commands && data.commands.length > 0) {
+                            await processCommands(data.commands);
+                        }
+
+                    } catch (e) {
+                        console.error('❌ Agent Error:', e);
+                        if(typingArea) typingArea.style.display = 'none';
+                        createMessage("Sorry, I couldn't connect to the AI. Please try again.", 'agent');
+                    }
+                }
+
+                async function processCommands(commands) {
+                    for (const cmd of commands) {
+                        // Small delay for effect
+                        await new Promise(r => setTimeout(r, 600));
+
+                        try {
+                            switch (cmd.type) {
+                                case 'create_card':
+                                    await createNewColumn(cmd.payload.title);
+                                    createMessage(`Card created: “${cmd.payload.title}”`, 'agent', true);
+                                    break;
+                                
+                                case 'add_task':
+                                    // Add to the last created column or first one
+                                    const targetCol = state.columns.find(col => col.title.toLowerCase() === (cmd.payload.column_search || '').toLowerCase()) || state.columns[state.columns.length - 1];
+                                    if (targetCol) {
+                                        const newTask = {
+                                            id: 'task-' + Date.now() + Math.random(),
+                                            column_id: targetCol.id,
+                                            title: cmd.payload.title,
+                                            status: 'todo',
+                                            due_date: null
+                                        };
+                                        await DB.saveTask(newTask);
+                                        targetCol.tasks.push(newTask);
+                                        render();
+                                        createMessage(`Task added to ${targetCol.title}: “${cmd.payload.title}”`, 'agent', true);
+                                    } else {
+                                        createMessage(`Could not find column for task: “${cmd.payload.title}”`, 'agent', true);
+                                    }
+                                    break;
+
+                                case 'start_timer':
+                                    const minutes = cmd.payload.duration_minutes || 25;
+                                    const taskIdx = cmd.payload.task_index || 0;
+                                    const search = cmd.payload.task_search;
+                                    
+                                    let targetTask = null;
+                                    
+                                    // 1. Search by name if provided
+                                    if (search) {
+                                        for (const col of state.columns) {
+                                            const found = col.tasks.find(t => t.title.toLowerCase().includes(search.toLowerCase()));
+                                            if (found) {
+                                                targetTask = found;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // 2. Fallback to "Today's Plan" or last column if no search or not found
+                                    if (!targetTask) {
+                                         let focusCol = state.columns.find(c => c.title === "Today's Plan") || state.columns[state.columns.length - 1];
+                                         if (focusCol && focusCol.tasks[taskIdx]) {
+                                             targetTask = focusCol.tasks[taskIdx];
+                                         }
+                                    }
+                                    
+                                    if (targetTask) {
+                                        targetTask.due_date = new Date(Date.now() + minutes * 60000).toISOString();
+                                        await DB.saveTask(targetTask);
+                                        render();
+                                        createMessage(`Timer started: ${minutes}m for “${targetTask.title}”`, 'agent', true);
+                                    } else {
+                                        createMessage(`Could not find task to start timer.`, 'agent', true);
+                                    }
+                                    break;
+
+                                case 'add_timer_to_task':
+                                    const taskSearch = cmd.payload.task_search;
+                                    const durationStr = cmd.payload.duration; // e.g., "1h 30m"
+
+                                    let foundTask = null;
+                                    for (const col of state.columns) {
+                                        foundTask = col.tasks.find(t => t.title.toLowerCase().includes(taskSearch.toLowerCase()));
+                                        if (foundTask) break;
+                                    }
+
+                                    if (foundTask) {
+                                        let totalMs = 0;
+                                        const parts = durationStr.match(/(\d+)([hm])/g); // Extract "1h", "30m"
+                                        if (parts) {
+                                            parts.forEach(part => {
+                                                const value = parseInt(part.slice(0, -1));
+                                                const unit = part.slice(-1);
+                                                if (unit === 'h') totalMs += value * 3600 * 1000;
+                                                else if (unit === 'm') totalMs += value * 60 * 1000;
+                                            });
+                                        }
+
+                                        if (totalMs > 0) {
+                                            foundTask.due_date = new Date(Date.now() + totalMs).toISOString();
+                                            await DB.saveTask(foundTask);
+                                            render();
+                                            createMessage(`Timer for '${foundTask.title}' set to ${durationStr}.`, 'agent', true);
+                                        } else {
+                                            createMessage(`Could not parse duration '${durationStr}'.`, 'agent', true);
+                                        }
+                                    } else {
+                                        createMessage(`Task '${taskSearch}' not found to add timer.`, 'agent', true);
+                                    }
+                                    break;
+                                    
+                                case 'update_task':
+                                     let taskToUpdate = null;
+                                     let updateColumn = null;
+
+                                     if (cmd.payload.task_search) {
+                                         // Search across all columns
+                                         for (const col of state.columns) {
+                                             const t = col.tasks.find(task => task.title.toLowerCase().includes(cmd.payload.task_search.toLowerCase()));
+                                             if (t) {
+                                                 taskToUpdate = t;
+                                                 updateColumn = col;
+                                                 break;
+                                             }
+                                         }
+                                     } else {
+                                         // Fallback to index on last column
+                                         updateColumn = state.columns[state.columns.length - 1];
+                                         if (updateColumn && updateColumn.tasks[cmd.payload.index]) {
+                                             taskToUpdate = updateColumn.tasks[cmd.payload.index];
+                                         }
+                                     }
+
+                                     if (taskToUpdate) {
+                                        taskToUpdate.title = cmd.payload.title;
+                                        await DB.saveTask(taskToUpdate);
+                                        render();
+                                        
+                                        let subtaskMsg = '';
+                                        if (cmd.payload.subtasks) {
+                                            subtaskMsg = '<br>Subtasks added:<br>' + cmd.payload.subtasks.map(s => `– ${s}`).join('<br>');
+                                        }
+                                        createMessage(`Task updated: ${taskToUpdate.title}${subtaskMsg}`, 'agent', true);
+                                     } else {
+                                        createMessage(`Could not find task to update.`, 'agent', true);
+                                     }
+                                     break;
+
+                                case 'complete_task':
+                                     const compCol = state.columns[state.columns.length - 1];
+                                     if (compCol && compCol.tasks[cmd.payload.index]) {
+                                         const t = compCol.tasks[cmd.payload.index];
+                                         if (t.status !== 'done') {
+                                             t.status = 'done';
+                                             await DB.saveTask(t);
+                                             render();
+                                             createMessage(`Task marked done: ${t.title}`, 'agent', true);
+                                         }
+                                     }
+                                     break;
+
+                                case 'create_notebook':
+                                    await createNotebookFromDash(cmd.payload.title || 'Agent Note', false);
+                                    createMessage(`Notebook created: “${cmd.payload.title}”`, 'agent', true);
+                                    break;
+
+                                case 'notebook_entry':
+                                    // Append to the last created notebook or create a new one if none
+                                    let targetNote = notes.length > 0 ? notes[notes.length - 1] : null;
+                                    
+                                    if (!targetNote) {
+                                        // Create one if it doesn't exist
+                                        const newNote = {
+                                            id: 'note-' + Date.now(),
+                                            title: 'Agent Notes',
+                                            content: '',
+                                            created_at: new Date().toISOString()
+                                        };
+                                        await DB.saveNotebook(newNote);
+                                        notes.push(newNote);
+                                        targetNote = newNote;
+                                    }
+                                    
+                                    // Append content
+                                    const newContent = cmd.payload.content || '';
+                                    if (targetNote.content) {
+                                        targetNote.content += `<br>${newContent}`;
+                                    } else {
+                                        targetNote.content = newContent;
+                                    }
+                                    
+                                    await DB.saveNotebook(targetNote);
+                                    // Refresh sidebar if it's open or relevant
+                                    if (typeof renderSidebarList === 'function') renderSidebarList();
+                                    
+                                    createMessage(`Saved to notebook "${targetNote.title}"`, 'agent', true);
+                                    break;
+                                
+                                case 'get_insights':
+                                    // This action would ideally trigger an analysis on the backend
+                                    // For now, a placeholder response.
+                                    createMessage("I'm analyzing your data to provide insights. Please tell me what specific area you'd like insights on (e.g., 'task completion rate', 'upcoming deadlines').", 'agent', true);
+                                    break;
+
+                                case 'none':
+                                    // Just reply was already handled by spoken_message
+                                    break;
+                            }
+                        } catch (err) {
+                            console.error("Command execution failed:", cmd, err);
+                            createMessage(`An error occurred trying to execute a command: ${err.message}`, 'agent', true);
+                        }
+                    }
+                }
+
+                // Helper to add task directly with details
+                async function addTaskToColumn(colId, title, durationMins) {
+                     const col = state.columns.find(c => c.id === colId);
+                     if (!col) return;
+                     
+                     const newTask = {
+                        id: 'task-' + Date.now() + Math.random(),
+                        column_id: colId,
+                        title: title,
+                        status: 'todo',
+                        due_date: null
+                    };
+                    
+                    // If duration provided, we don't set timer immediately unless requested, 
+                    // but we could store it. The agent flow sets timer explicitly later.
+                    
+                    await DB.saveTask(newTask);
+                    col.tasks.push(newTask);
+                    render();
+                }
+                
+                // Override createNewColumn to accept title
+                async function createNewColumn(title = 'NEW SECTION') {
+                     // Check tier logic (simplified for agent)
+                     // Find rightmost position
+                    let maxX = 100;
+                    state.columns.forEach(c => { maxX = Math.max(maxX, c.x + 360); });
+        
+                    const newCol = {
+                        id: 'c' + Date.now(),
+                        title: title,
+                        x: maxX + 50,
+                        y: 150,
+                        tasks: []
+                    };
+                    state.columns.push(newCol);
+                    render();
+                    await saveColumnLayout();
+                }
+
+                // This is the original function that was called in the sidebar, let's keep it for compatibility
+                function toggleChatInterface() {
+                    toggleInterface();
+                }
+
+        async function signOut() {
+            await fetch(`${CONFIG.API_BASE_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+            localStorage.removeItem('haldai_logged_in');
+            window.location.href = '/signin';
+        }
+    </script>
+    <style>
+        .system-msg {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            width: 100%;
+            margin: 4px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            animation: msgPop 0.4s ease forwards;
+        }
+        .system-icon {
+            font-size: 16px;
+        }
+        .system-content {
+            flex: 1;
+        }
+    </style>
+
+
+</body>
+
+</html>

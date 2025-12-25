@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docs</title>
+  <link rel="shortcut icon" href="public/logo.png" type="image/x-icon">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* =========================================
+       CORE VARIABLES & RESET
+       ========================================= */
+    :root {
+      --bg: #05000a;
+      --sidebar-bg: rgba(10, 5, 16, 0.6);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent: #c026d3;
+      --text-main: #ffffff;
+      --text-muted: #a3a3a3;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* BACKGROUND FX (From Index) */
+    .fixed-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: -999;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle at 50% -20%, rgba(120, 30, 150, 0.2) 0%, transparent 50%),
+        radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+      background-size: 100% 100%, 50px 50px, 100px 100px;
+      background-position: 0 0, 0 0, 25px 25px;
+    }
+
+    /* =========================================
+       FLOATING NAVBAR
+       ========================================= */
+    .navbar {
+      position: fixed;
+      top: 20px; /* Floating gap */
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 40px);
+      max-width: 1200px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(10, 5, 16, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .logo-img { height: 28px; width: auto; }
+    .site-name { font-size: 1.1rem; font-weight: 700; color: #fff; text-decoration: none; }
+
+    .nav-center { display: flex; gap: 32px; }
+    .nav-link {
+      color: #a0a0a0;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-link:hover, .nav-link.active { color: #fff; }
+
+    .nav-right .nav-btn {
+      background: #fff;
+      color: #000;
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: transform 0.2s;
+    }
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+
+    /* =========================================
+       DOCS LAYOUT
+       ========================================= */
+    .docs-container {
+      display: flex;
+      max-width: 1200px;
+      margin: 120px auto 60px; /* Top margin for navbar */
+      padding: 0 20px;
+      gap: 60px;
+    }
+
+    /* SIDEBAR */
+    .docs-sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 120px;
+      height: calc(100vh - 140px);
+      overflow-y: auto;
+      padding-right: 20px;
+    }
+
+    .sidebar-group { margin-bottom: 30px; }
+    .sidebar-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .sidebar-link {
+      display: block;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 6px 0;
+      transition: color 0.2s;
+      border-left: 2px solid transparent;
+      padding-left: 12px;
+      margin-left: -14px;
+    }
+    .sidebar-link:hover { color: #fff; }
+    .sidebar-link.active {
+      color: #fff;
+      border-left-color: var(--accent);
+    }
+
+    /* MAIN CONTENT */
+    .docs-content {
+      flex: 1;
+      max-width: 800px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(to bottom, #fff, #e879f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lead { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 3rem; }
+
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 3rem 0 1rem;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    h3 { font-size: 1.3rem; margin: 2rem 0 0.8rem; color: #fff; }
+
+    p { margin-bottom: 1.2rem; color: #b0b0b0; }
+
+    ul, ol { margin-bottom: 1.5rem; padding-left: 20px; color: #b0b0b0; }
+    li { margin-bottom: 8px; }
+
+    code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: #e879f9;
+    }
+
+    pre {
+      background: #0f0814;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code { background: none; padding: 0; color: #d4d4d4; }
+
+    /* CARDS */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin: 2rem 0;
+    }
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.3s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card h4 { color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .card p { font-size: 0.9rem; margin-bottom: 0; }
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      .docs-container { flex-direction: column; }
+      .docs-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+        margin-bottom: 40px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 20px;
+      }
+      .navbar { padding: 0 16px; }
+      .nav-center { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="fixed-background"></div>
+
+  <!-- FLOATING NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <img src="/public/logo.png" alt="HaldAI" class="logo-img">
+      <a href="/" class="site-name">HaldAI</a>
+    </div>
+    <div class="nav-center">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/docs" class="nav-link active">Docs</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+    </div>
+    <div class="nav-right">
+      <a href="/dashboard" class="nav-btn">Launch App</a>
+    </div>
+  </nav>
+
+  <!-- DOCS CONTAINER -->
+  <div class="docs-container">
+    
+    <!-- SIDEBAR -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <a href="#intro" class="sidebar-link active">Introduction</a>
+        <a href="#quickstart" class="sidebar-link">Quick Start</a>
+        <a href="#interface" class="sidebar-link">Interface Tour</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Core Features</div>
+        <a href="#tasks" class="sidebar-link">Task Cards</a>
+        <a href="#notebooks" class="sidebar-link">Notebooks</a>
+        <a href="#ai" class="sidebar-link">AI Assistant</a>
+        <a href="#timers" class="sidebar-link">Focus Timers</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Advanced</div>
+        <a href="#shortcuts" class="sidebar-link">Shortcuts</a>
+        <a href="#pricing" class="sidebar-link">Plans & Limits</a>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="docs-content">
+      
+      <section id="intro">
+        <h1>Documentation</h1>
+        <p class="lead">Welcome to HaldAI. Learn how to master your workflow, organize your life, and leverage AI to get more done.</p>
+        
+        <h2>What is HaldAI?</h2>
+        <p>HaldAI is an "Obsidian-meets-Trello" productivity OS designed for deep work. It combines a drag-and-drop Kanban board, a rich-text notebook, and a context-aware AI agent into a single, beautiful interface.</p>
+        
+        <div class="feature-grid">
+          <div class="card">
+            <h4><i data-lucide="layout" class="w-4 h-4 text-purple-400"></i> Flow State</h4>
+            <p>A clutter-free dark mode interface designed to keep you in the zone.</p>
+          </div>
+          <div class="card">
+            <h4><i data-lucide="brain-circuit" class="w-4 h-4 text-purple-400"></i> Second Brain</h4>
+            <p>Capture ideas instantly in notebooks without leaving your task view.</p>
+          </div>
+          <div class="card">
+            <h4><i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i> AI Agent</h4>
+            <p>An intelligent partner that plans your day and manages your board.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="quickstart">
+        <h2>Quick Start</h2>
+        <p>Get up and running in less than 60 seconds.</p>
+        <ol>
+          <li><strong>Create a Board:</strong> Your workspace starts with a default "Operations" board.</li>
+          <li><strong>Add a Task:</strong> Click <code>+ ADD NODE</code> to create your first task.</li>
+          <li><strong>Start a Timer:</strong> Click the edit icon on a task and set a duration (e.g., 25 mins) to begin a focus session.</li>
+          <li><strong>Ask AI:</strong> Open the Agent tab and type <em>"Plan my day for coding"</em> to auto-generate tasks.</li>
+        </ol>
+      </section>
+
+      <section id="interface">
+        <h2>Interface Tour</h2>
+        <p>HaldAI is divided into three main areas:</p>
+        <ul>
+          <li><strong>The Canvas (Center):</strong> Your infinite Kanban board. Pan with middle-click or spacebar + drag. Zoom with scroll.</li>
+          <li><strong>The Sidebar (Left):</strong> Quick access to Notebooks and different workspaces.</li>
+          <li><strong>The Agent (Floating):</strong> Your AI companion, accessible via the "Agent" tab or <code>Ctrl + /</code>.</li>
+        </ul>
+      </section>
+
+      <section id="tasks">
+        <h2>Task Cards</h2>
+        <p>Tasks are the atomic units of work in HaldAI. They live in columns (Sections) and can be dragged around freely.</p>
+        <h3>Features</h3>
+        <ul>
+          <li><strong>Drag & Drop:</strong> Move tasks between columns to change status.</li>
+          <li><strong>Timers:</strong> Tasks change visual state when active or overdue.</li>
+          <li><strong>Subtasks:</strong> Break down complex tasks using the AI agent.</li>
+        </ul>
+      </section>
+
+      <section id="notebooks">
+        <h2>Notebooks</h2>
+        <p>The Notebook is a distraction-free writing environment. It supports rich text and slash commands.</p>
+        <p>Type <code>/</code> in the editor to open the command menu. You can insert headings, to-do lists, quotes, and more.</p>
+        <pre><code>/heading 1
+/todo
+/quote</code></pre>
+      </section>
+
+      <section id="ai">
+        <h2>AI Assistant</h2>
+        <p>The AI Agent isn't just a chatbot—it has control over your dashboard. You can give it natural language commands:</p>
+        <ul>
+          <li><em>"Create a column for Marketing"</em></li>
+          <li><em>"Add a task to check emails"</em></li>
+          <li><em>"Start a 45 minute timer for the Design task"</em></li>
+          <li><em>"Write a blog post outline in my notebook"</em></li>
+        </ul>
+      </section>
+
+      <section id="shortcuts">
+        <h2>Keyboard Shortcuts</h2>
+        <div class="feature-grid">
+          <div class="card">
+            <h4><code>Ctrl + /</code></h4>
+            <p>Toggle AI Agent</p>
+          </div>
+          <div class="card">
+            <h4><code>/</code></h4>
+            <p>Open Notebook Slash Menu</p>
+          </div>
+          <div class="card">
+            <h4><code>Space + Drag</code></h4>
+            <p>Pan the Dashboard Canvas</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    
+    // Simple scroll spy for sidebar
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.sidebar-link');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 150) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href').includes(current)) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

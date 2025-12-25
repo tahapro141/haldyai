@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notebooks</title>
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <link rel="shortcut icon" href="public/logo.png" type="image/x-icon">
+
+    <!-- TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ICONS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- FONTS -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        bg: '#030304',
+                        sidebar: '#0A0A0C',
+                        surface: '#121215',
+                        border: 'rgba(255,255,255,0.06)',
+                        primary: '#7C3AED',
+                        accent: '#2DD4BF',
+                        textMain: '#EDEDEF',
+                        textMuted: '#888890'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #030304;
+            color: #EDEDEF;
+            overflow: hidden;
+        }
+
+        /* TOAST */
+        #toast-container {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(18, 18, 21, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            display: flex;
+            items-center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.upgrade {
+            border-color: #bf00ff;
+            background: rgba(191, 0, 255, 0.1);
+        }
+
+        /* --- UI COMPONENTS --- */
+        .glass-sidebar {
+            background: rgba(10, 10, 12, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-sidebar.closed {
+            margin-left: -280px;
+        }
+
+        /* --- NOTEBOOK EDITOR (Line System) --- */
+        #editor-canvas {
+            outline: none;
+            min-height: 50vh;
+        }
+
+        #editor-canvas p,
+        #editor-canvas div {
+            min-height: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        /* Styled Elements injected via Slash Command */
+        #editor-canvas h1 {
+            font-size: 2.25em;
+            font-weight: 700;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            line-height: 1.2;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.2em;
+        }
+
+        #editor-canvas h2 {
+            font-size: 1.75em;
+            font-weight: 600;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            line-height: 1.3;
+        }
+
+        #editor-canvas blockquote {
+            border-left: 3px solid #7C3AED;
+            padding-left: 1em;
+            color: #aaa;
+            font-style: italic;
+            margin-bottom: 1em;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.5em 1em;
+            border-radius: 0 4px 4px 0;
+        }
+
+        #editor-canvas ul {
+            list-style: disc;
+            padding-left: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        #editor-canvas ol {
+            list-style: decimal;
+            padding-left: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        #editor-canvas li {
+            margin-bottom: 0.25em;
+        }
+
+        /* Custom Todo Item */
+        .todo-item {
+            display: flex;
+            align-items: start;
+            gap: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .todo-checkbox {
+            appearance: none;
+            width: 1.1em;
+            height: 1.1em;
+            border: 2px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            margin-top: 0.2em;
+        }
+
+        .todo-checkbox:checked {
+            background: #2DD4BF;
+            border-color: #2DD4BF;
+        }
+
+        .todo-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 1px;
+            font-size: 0.8em;
+            color: black;
+            font-weight: bold;
+        }
+
+        .todo-content {
+            flex: 1;
+            outline: none;
+        }
+
+        .todo-checkbox:checked+.todo-content {
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        /* HR */
+        hr {
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 2em 0;
+        }
+
+        /* Placeholders */
+        [contenteditable]:empty:before {
+            content: attr(placeholder);
+            color: #444;
+            pointer-events: none;
+            display: block;
+            /* For empty divs */
+        }
+
+        /* Slash Menu */
+        #slash-menu {
+            position: fixed;
+            width: 280px;
+            max-height: 300px;
+            /* Scrollable */
+            overflow-y: auto;
+            background: rgba(18, 18, 21, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            display: none;
+        }
+
+        #slash-menu.open {
+            display: block;
+            animation: fadeInScale 0.1s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background 0.1s;
+            color: #BABABF;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: #FFF;
+        }
+
+        .menu-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Toggle Button Hover */
+        .sidebar-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7C3AED;
+        }
+
+        /* --- FLOATING AGENT WIDGET REMOVED --- */
+    </style>
+
+    <style>
+        /* Chat Interface Styles from chat.html */
+        .chat-card {
+            width: 100%;
+            height: 100%;
+            background: var(--surface-black);
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(168, 85, 247, 0.15);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            backdrop-filter: blur(15px);
+        }
+
+        .header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .ai-icon-box {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-purple);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .ai-icon-box svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .header h3 {
+            color: var(--text-white);
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg {
+            max-width: 82%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            font-size: 14.5px;
+            line-height: 1.5;
+            animation: msgPop 0.4s ease forwards;
+            position: relative;
+        }
+
+        @keyframes msgPop {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .ai-msg {
+            background: rgba(168, 85, 247, 0.08);
+            color: var(--text-white);
+            align-self: flex-start;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-bottom-left-radius: 5px;
+        }
+
+        .user-msg {
+            background: var(--gradient-purple);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .typing {
+            padding: 0 1.25rem 0.5rem;
+            font-size: 12px;
+            color: var(--accent-purple);
+            font-weight: 500;
+            display: none;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .dots { display: flex; gap: 3px; }
+        .dot { width: 4px; height: 4px; background: var(--accent-purple); border-radius: 50%; animation: blink 1.4s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        .input-area {
+            padding: 1rem;
+        }
+
+        .input-box {
+            background: #15151a;
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 5px 5px 5px 15px;
+            display: flex;
+            align-items: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
+            background: #1a1a22;
+        }
+
+        .input-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            flex: 1;
+            outline: none;
+            font-size: 14px;
+            height: 45px;
+        }
+
+        .send-button {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+    </style>
+    <style>
+        /* Chat Interface Styles from chat.html */
+        .chat-card {
+            width: 100%;
+            height: 100%;
+            background: var(--surface-black);
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(168, 85, 247, 0.15);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            backdrop-filter: blur(15px);
+        }
+
+        .header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .ai-icon-box {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-purple);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .ai-icon-box svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .header h3 {
+            color: var(--text-white);
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg {
+            max-width: 82%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            font-size: 14.5px;
+            line-height: 1.5;
+            animation: msgPop 0.4s ease forwards;
+            position: relative;
+        }
+
+        @keyframes msgPop {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .ai-msg {
+            background: rgba(168, 85, 247, 0.08);
+            color: var(--text-white);
+            align-self: flex-start;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-bottom-left-radius: 5px;
+        }
+
+        .user-msg {
+            background: var(--gradient-purple);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .typing {
+            padding: 0 1.25rem 0.5rem;
+            font-size: 12px;
+            color: var(--accent-purple);
+            font-weight: 500;
+            display: none;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .dots { display: flex; gap: 3px; }
+        .dot { width: 4px; height: 4px; background: var(--accent-purple); border-radius: 50%; animation: blink 1.4s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        .input-area {
+            padding: 1rem;
+        }
+
+        .input-box {
+            background: #15151a;
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 5px 5px 5px 15px;
+            display: flex;
+            align-items: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
+            background: #1a1a22;
+        }
+
+        .input-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            flex: 1;
+            outline: none;
+            font-size: 14px;
+            height: 45px;
+        }
+
+        .send-button {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen text-textMain selection:bg-primary/30 selection:text-white">
+
+    <!-- SIDEBAR -->
+    <!-- Mobile Sidebar Toggle -->
+    <div class="fixed top-4 left-4 z-50 md:hidden p-2 bg-black/50 backdrop-blur rounded-full border border-white/10"
+        onclick="document.querySelector('aside').classList.toggle('-translate-x-full')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18" />
+        </svg>
+    </div>
+
+    <aside id="main-sidebar"
+        class="w-[280px] flex-shrink-0 glass-sidebar flex flex-col fixed md:relative h-full z-40 transition-transform duration-300 -translate-x-full md:translate-x-0">
+        <!-- Logo -->
+        <div class="h-14 flex items-center px-6 border-b border-white/5">
+            <img src="/public/logo.png" alt="Logo" class="w-6 h-6 object-contain mr-3">
+            <span class="font-bold text-base tracking-tight text-white">HALDAI OS</span>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex-1 overflow-y-auto py-6 px-3 space-y-8">
+            <!-- Main Nav -->
+            <div>
+                <p class="px-3 text-xs font-bold uppercase tracking-widest mb-3" style="color: #555;">Workspace</p>
+                <a href="/dashboard"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm bg-transparent text-textMuted hover:text-white hover:bg-white/5 transition-all group">
+                    <svg class="w-4 h-4 group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Dashboard
+                </a>
+            </div>
+
+            <!-- Notebooks -->
+            <div>
+                <div class="flex items-center justify-between px-3 mb-2">
+                    <p class="text-xs font-bold uppercase tracking-widest" style="color: #555;">Notebooks</p>
+                    <button onclick="createNotebook()"
+                        class="hover:text-white transition-colors hover:bg-white/10 p-1 rounded" style="color: #555;">
+                        <i data-lucide="plus" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                <!-- Interactive Note List -->
+                <div id="sidebar-list" class="space-y-0.5"></div>
+            </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div class="mt-auto border-t border-white/5 bg-[#05000a]">
+            <div class="p-4 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors group relative"
+                onclick="toggleProfileMenu()">
+                <div class="relative">
+                    <div id="user-avatar"
+                        class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center text-xs font-bold ring-2 ring-white/5 text-white overflow-hidden">
+                        <img id="sidebar-avatar-img" src="" class="w-full h-full object-cover hidden">
+                        <span id="sidebar-avatar-initial">U</span>
+                    </div>
+                </div>
+                <div class="overflow-hidden flex-1">
+                    <p id="sidebar-username" class="text-sm font-bold text-white truncate">User</p>
+                    <p id="sidebar-email" class="text-[10px] text-textMuted truncate">user@example.com</p>
+                </div>
+                <div id="sidebar-plan"
+                    class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-gray-800 text-gray-400 border border-gray-700">
+                    FREE</div>
+
+                <div id="profile-menu"
+                    class="absolute bottom-full left-4 right-4 mb-2 bg-[#1a1024] border border-white/10 rounded-xl shadow-2xl p-2 invisible opacity-0 translate-y-2 transition-all duration-200 z-[60]">
+                    <div onclick="window.location.href='/pricing'"
+                        class="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-yellow-500 hover:bg-yellow-500/10 cursor-pointer mb-1">
+                        <i data-lucide="zap" class="w-4 h-4"></i> <span class="font-bold">Upgrade to Pro</span>
+                    </div>
+                    <div class="h-px bg-white/5 my-1"></div>
+                    <div onclick="signOut()"
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-400/10 cursor-pointer">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> <span>Sign Out</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- AGENT WIDGET (Floating) -->
+    <!-- AGENT WIDGET (Floating) REMOVED -->
+
+    <div id="chat-interface" class="fixed bottom-8 right-8 w-[380px] h-[500px] bg-[#0f0f12] border
+    border-white/10 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 opacity-0 translate-y-4
+    pointer-events-none z-[1000]">
+        <div class="header">
+            <div class="ai-icon-box">
+                <!-- AI Minimalist Sparkle SVG -->
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L14.5 9L22 11.5L14.5 14L12 21L9.5 14L2 11.5L9.5 9L12 2Z" />
+                </svg>
+            </div>
+            <div>
+                <h3>haldAI</h3>
+            </div>
+            <button onclick="toggleInterface()" class="p-1 rounded-full hover:bg-white/10 text-textMuted ml-auto"><i
+    data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+
+        <div class="messages-container" id="chatWindow">
+            <div class="msg ai-msg">Hello! I am haldAI. Ready to create something incredible? 💜</div>
+        </div>
+
+        <div id="typingArea" class="typing">
+            haldAI is processing
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off">
+                <button class="send-button" id="sendBtn">
+                    <svg style="width:18px;height:18px" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN EDITOR -->
+    <main class="flex-1 flex flex-col bg-bg overflow-hidden relative transition-all duration-300">
+        <!-- Top Bar -->
+        <header
+            class="h-14 flex items-center justify-between px-4 border-b border-white/5 bg-bg/90 backdrop-blur-md z-40 sticky top-0">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()"
+                    class="sidebar-toggle-btn p-2 rounded-lg text-textMuted hover:text-white transition-colors">
+                    <svg fill="currentColor" class="w-5 h-5" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M50.008,56l-35.989,0c-3.309,0 -5.995,-2.686 -5.995,-5.995l0,-36.011c0,-3.308 2.686,-5.995 5.995,-5.995l35.989,0c3.309,0 5.995,2.687 5.995,5.995l0,36.011c0,3.309 -2.686,5.995 -5.995,5.995Zm-25.984,-4.001l0,-39.999l-9.012,0c-1.65,0 -2.989,1.339 -2.989,2.989l0,34.021c0,1.65 1.339,2.989 2.989,2.989l9.012,0Zm24.991,-39.999l-20.991,0l0,39.999l20.991,0c1.65,0 2.989,-1.339 2.989,-2.989l0,-34.021c0,-1.65 -1.339,-2.989 -2.989,-2.989Z">
+                        </path>
+                    </svg>
+                </button>
+                <div class="flex items-center gap-2 text-sm text-textMuted select-none">
+                    <span>/</span><span id="breadcrumb-title" class="text-white">Notebooks</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-[10px] text-green-500/80 uppercase font-bold tracking-wider"
+                    id="save-status">Saved</span>
+                <button class="p-2 hover:bg-white/5 rounded-lg text-textMuted transition-colors"><i
+                        data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+        </header>
+
+        <!-- Editor Content -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar" id="main-scroll" onclick="focusEditor(event)">
+            <div class="max-w-3xl mx-auto py-12 px-12">
+                <!-- Cover Image Area (Mock) -->
+                <div
+                    class="group relative h-20 mb-8 -mt-6 rounded-lg border-2 border-dashed border-white/5 hover:border-white/10 hidden items-center justify-center cursor-pointer transition-colors">
+                    <span class="text-xs text-textMuted group-hover:text-white flex items-center gap-2"><i
+                            data-lucide="image" class="w-3 h-3"></i>Add Cover</span>
+                </div>
+                <!-- Icons -->
+                <div id="page-icon" class="mb-6 cursor-pointer hover:opacity-80 transition-opacity text-primary">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <!-- Title -->
+                <input type="text" id="note-title"
+                    class="w-full bg-transparent text-5xl font-bold text-white outline-none placeholder-gray-700 mb-6"
+                    placeholder="Untitled" autocomplete="off">
+                <!-- Content -->
+                <div id="editor-canvas" class="text-lg text-gray-300 leading-relaxed max-w-none" contenteditable="true"
+                    spellcheck="false" placeholder="Type '/' for commands..."></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SLASH MENU -->
+    <div id="slash-menu">
+        <div
+            class="p-2 border-b border-white/5 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 sticky top-0 bg-[#121215]/95 backdrop-blur-md">
+            Basic Blocks</div>
+        <div class="menu-item" onmousedown="event.preventDefault(); execCmd('formatBlock', 'P')">
+            <div class="menu-icon"><i data-lucide="type" class="w-5 h-5"></i></div>
+            <div>
+                <div class="text-sm font-medium">Text</div>
+                <div class="text-[10px] text-gray-500">Just start writing with plain text.</div>
+            </div>
+        </div>
+        <div class="menu-item" onmousedown="event.preventDefault(); execCmd('formatBlock', 'H1')">
+            <div class="menu-icon"><i data-lucide="heading-1" class="w-5 h-5"></i></div>
+            <div>
+                <div class="text-sm font-medium">Heading 1</div>
+                <div class="text-[10px] text-gray-500">Big section heading.</div>
+            </div>
+        </div>
+        <div class="menu-item" onmousedown="event.preventDefault(); execCmd('formatBlock', 'H2')">
+            <div class="menu-icon"><i data-lucide="heading-2" class="w-5 h-5"></i></div>
+            <div>
+                <div class="text-sm font-medium">Heading 2</div>
+                <div class="text-[10px] text-gray-500">Medium section heading.</div>
+            </div>
+        </div>
+        <div class="menu-item" onmousedown="event.preventDefault(); insertTodo()">
+            <div class="menu-icon"><i data-lucide="check-square" class="w-5 h-5"></i></div>
+            <div>
+                <div class="text-sm font-medium">To-do List</div>
+                <div class="text-[10px] text-gray-500">Track tasks with a to-do list.</div>
+            </div>
+        </div>
+        <div class="menu-item" onmousedown="event.preventDefault(); execCmd('insertUnorderedList')">
+            <div class="menu-icon"><i data-lucide="list" class="w-5 h-5"></i></div>
+            <div>
+                <div class="text-sm font-medium">Bulleted List</div>
+                <div class="text-[10px] text-gray-500">Create a simple bulleted list.</div>
+            </div>
+        </div>
+        <div class="menu-item" onmousedown="event.preventDefault(); insertQuote()">
+            <div class="menu-icon"><i data-lucide="quote" class="w-5 h-5"></i></div>
+            <div>
+                <div class="text-sm font-medium">Quote</div>
+                <div class="text-[10px] text-gray-500">Capture a quote.</div>
+            </div>
+        </div>
+        <div class="menu-item" onmousedown="event.preventDefault(); execCmd('insertHorizontalRule')">
+            <div class="menu-icon"><i data-lucide="minus" class="w-5 h-5"></i></div>
+            <div>
+                <div class="text-sm font-medium">Divider</div>
+                <div class="text-[10px] text-gray-500">Visually separate content.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <!-- IndexedDB -->
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        // --- STORE ---
+        let notes = [];
+        let activeNoteId = null;
+
+        // --- DOM REFS ---
+        const sidebar = document.getElementById('main-sidebar');
+        const sidebarList = document.getElementById('sidebar-list');
+        const editorCanvas = document.getElementById('editor-canvas');
+        const titleInput = document.getElementById('note-title');
+        const slashMenu = document.getElementById('slash-menu');
+        const saveStatus = document.getElementById('save-status');
+
+        let slashActive = false;
+        let savedRange = null;
+        let saveTimeout = null;
+
+        // PWA
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+        // --- TIER CHECK ---
+        function checkTier(feature) {
+            const plan = currentUser?.plan || 'free';
+
+            if (plan === 'obsessed') return true;
+
+            if (plan === 'pro') {
+                return feature !== 'ai';
+            }
+
+            if (plan === 'free') {
+                switch (feature) {
+                    case 'new_notebook':
+                        return notes.length < 1;
+                    case 'ai':
+                    case 'timers':
+                    case 'slash_feature': // Generic catch-all for advanced slash commands
+                        return false;
+                    default:
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        // --- INIT ---
+        async function init() {
+            lucide.createIcons();
+            await DB.init();
+            await fetchUser(); // Fetches user and sets plan in currentUser
+
+            showDesktopAppNotification(); // Show download prompt
+
+            // Check URL param first
+            const params = new URLSearchParams(window.location.search);
+            const noteParam = params.get('note');
+
+            await fetchNotes();
+
+            if (noteParam) {
+                await loadNote(noteParam);
+            } else if (notes.length > 0) {
+                await loadNote(notes[0].id);
+            } else {
+                await createNotebook();
+            }
+
+            // Events
+            titleInput.addEventListener('input', (e) => {
+                const note = notes.find(n => n.id === activeNoteId);
+                if (note) note.title = e.target.value;
+                renderSidebar(); // Optimistic update
+                triggerAutoSave();
+            });
+
+            editorCanvas.addEventListener('input', () => {
+                triggerAutoSave();
+            });
+            editorCanvas.addEventListener('keyup', handleKeyUp);
+            editorCanvas.addEventListener('keydown', handleKeyDown);
+
+            // Interaction for checkbox toggling inside contentEditable
+            editorCanvas.addEventListener('click', (e) => {
+                if (e.target.classList.contains('todo-checkbox')) {
+                    e.target.setAttribute('checked', e.target.checked);
+                    const content = e.target.nextElementSibling;
+                    if (e.target.checked) content.classList.add('line-through', 'text-[#666]');
+                    else content.classList.remove('line-through', 'text-[#666]');
+                    triggerAutoSave();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (slashActive && !slashMenu.contains(e.target)) closeSlashMenu();
+            });
+        }
+
+        function showDesktopAppNotification() {
+            const plan = currentUser?.plan || 'free';
+            const isElectron = navigator.userAgent.toLowerCase().includes('electron');
+
+            if ((plan === 'pro' || plan === 'obsessed') && !isElectron) {
+                setTimeout(() => {
+                    const container = document.getElementById('toast-container');
+                    if(!container) return;
+                    const el = document.createElement('div');
+                    el.className = 'toast upgrade'; // Use 'upgrade' style
+                    // Placeholder for download link
+                    el.innerHTML = `<i data-lucide="download-cloud" class="w-4 h-4 text-purple-400"></i> Get the full experience! <button onclick="window.location.href='#download'" class="ml-2 px-2 py-1 bg-purple-500 rounded text-[10px] font-bold">DOWNLOAD</button>`;
+                    container.appendChild(el);
+                    lucide.createIcons();
+                    setTimeout(() => el.classList.add('show'), 10);
+                    setTimeout(() => {
+                        el.classList.remove('show');
+                        setTimeout(() => el.remove(), 300);
+                    }, 10000); // Show for 10 seconds
+                }, 5000); // 5 seconds delay
+            }
+        }
+
+        async function fetchNotes() {
+            const data = await DB.getNotebooks();
+            if (data) {
+                notes = data;
+                renderSidebar();
+            }
+        }
+
+        // --- AUTH & PROFILE ---
+        let currentUser = {};
+
+        async function fetchUser() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/auth/check`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.authenticated) {
+                    currentUser = data.user;
+                    currentUser.plan = data.plan || 'free';
+                    updateProfileUI();
+                } else {
+                    window.location.href = '/signin';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function updateProfileUI() {
+            const nameEl = document.getElementById('sidebar-username');
+            const emailEl = document.getElementById('sidebar-email');
+            if (nameEl) nameEl.innerText = currentUser.name || 'User';
+            if (emailEl) emailEl.innerText = currentUser.email || '';
+
+            const badge = document.getElementById('sidebar-plan');
+            if (badge) {
+                badge.innerText = currentUser.plan.toUpperCase();
+                if (currentUser.plan === 'pro') badge.className = "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30";
+                if (currentUser.plan === 'obsessed') badge.className = "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30";
+            }
+
+            if (currentUser.picture) {
+                const img = document.getElementById('sidebar-avatar-img');
+                const init = document.getElementById('sidebar-avatar-initial');
+                if (img && init) {
+                    img.src = currentUser.picture;
+                    img.classList.remove('hidden');
+                    init.classList.add('hidden');
+                }
+            }
+        }
+
+        async function signOut() {
+            await fetch(`${CONFIG.API_BASE_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+            localStorage.removeItem('haldai_logged_in');
+            window.location.href = '/signin';
+        }
+
+        // --- SIDEBAR TOGGLE ---
+        function toggleSidebar() {
+            sidebar.classList.toggle('closed');
+        }
+
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profile-menu');
+            if (menu.classList.contains('invisible')) {
+                menu.classList.remove('invisible', 'opacity-0', 'translate-y-2');
+            } else {
+                menu.classList.add('invisible', 'opacity-0', 'translate-y-2');
+            }
+        }
+
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profile-menu');
+            if (!menu) return;
+            const toggle = document.querySelector('[onclick="toggleProfileMenu()"]');
+            if (toggle && !menu.contains(e.target) && !toggle.contains(e.target)) {
+                menu.classList.add('invisible', 'opacity-0', 'translate-y-2');
+            }
+        });
+
+        // --- NOTE MANAGEMENT ---
+        async function createNotebook() {
+            if (!checkTier('new_notebook')) {
+                showToast("Create more than 1 notebook with a Pro plan.", "upgrade");
+                return;
+            }
+
+            const newTitle = 'Untitled Page';
+            const newContent = '<p placeholder="Start writing..."></p>';
+            const newNote = {
+                id: 'note-' + Date.now(),
+                title: newTitle,
+                content: newContent,
+                created_at: new Date().toISOString()
+            };
+
+            await DB.saveNotebook(newNote);
+            notes.push(newNote);
+            activeNoteId = newNote.id;
+            renderSidebar();
+            loadNote(newNote.id);
+        }
+
+        function renderSidebar() {
+            if (!sidebarList) return;
+            sidebarList.innerHTML = notes.map(note => `
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-colors group ${note.id === activeNoteId ? 'bg-white/10 text-white' : 'text-textMuted hover:text-white hover:bg-white/5'}">
+                    <i data-lucide="file-text" class="w-4 h-4 transition-transform group-hover:scale-110" onclick="loadNote('${note.id}')"></i>
+                    <span class="text-sm truncate font-medium flex-1" onclick="loadNote('${note.id}')">${note.title || 'Untitled'}</span>
+                    <button onclick="event.stopPropagation(); deleteNotebook('${note.id}')" class="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all" title="Delete notebook">
+                        <i data-lucide="trash-2" class="w-3 h-3 text-red-400"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        async function deleteNotebook(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            const confirmed = confirm(`Delete "${note.title}"? This action cannot be undone.`);
+            if (!confirmed) return;
+
+            try {
+                // Delete from IndexedDB
+                await DB.deleteNotebook(id);
+
+                // Remove from local array
+                notes = notes.filter(n => n.id !== id);
+
+                // If deleted note was active, load another one
+                if (activeNoteId === id) {
+                    if (notes.length > 0) {
+                        await loadNote(notes[0].id);
+                    } else {
+                        // Create a new notebook if all deleted
+                        await createNotebook();
+                    }
+                }
+
+                renderSidebar();
+                showToast("Notebook deleted", "normal");
+            } catch (e) {
+                console.error('Delete error:', e);
+                showToast("Failed to delete notebook", "normal");
+            }
+        }
+
+        async function loadNote(id) {
+            activeNoteId = id;
+            let note = notes.find(n => n.id === id);
+            if (!note) {
+                const all = await DB.getNotebooks();
+                note = all.find(n => n.id === id);
+                if (note) {
+                    notes.push(note);
+                    // Update the note in the local array to ensure it's there for future reference
+                    renderSidebar();
+                }
+            }
+
+            if (!note) {
+                // If the note doesn't exist, create a new one with the given ID
+                // This handles cases where someone directly navigates to a URL with a note ID
+                // that doesn't exist yet
+                note = {
+                    id: id,
+                    title: 'Untitled Page',
+                    content: '<p><br></p>',
+                    created_at: new Date().toISOString()
+                };
+                await DB.saveNotebook(note);
+                notes.push(note);
+                showToast("New notebook created", "normal");
+            }
+
+            activeNoteId = note.id;
+            renderSidebar();
+            window.history.pushState({}, '', `?note=${id}`);
+            titleInput.value = note.title;
+            editorCanvas.innerHTML = note.content || '<p><br></p>';
+        }
+
+        function triggerAutoSave() {
+            saveStatus.innerText = 'Saving...';
+            saveStatus.className = 'text-[10px] text-yellow-500/80 uppercase font-bold tracking-wider';
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveNotes, 1000);
+        }
+
+        async function saveNotes() {
+            const note = notes.find(n => n.id === activeNoteId);
+            if (note) {
+                note.content = editorCanvas.innerHTML;
+                note.title = titleInput.value;
+                await DB.saveNotebook(note);
+                saveStatus.innerText = 'Saved';
+                saveStatus.className = 'text-[10px] text-green-500/80 uppercase font-bold tracking-wider';
+            }
+        }
+
+        // --- EDITOR LOGIC (SLASH CMD) ---
+        function handleKeyUp(e) {
+            if (e.key === '/') {
+                const sel = window.getSelection();
+                if (!sel.rangeCount) return;
+                const range = sel.getRangeAt(0);
+                savedRange = range.cloneRange();
+                const rect = range.getBoundingClientRect();
+                openSlashMenu(rect.left, rect.bottom + 10);
+            }
+            if (slashActive && e.key === 'Escape') closeSlashMenu();
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && slashActive) {
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'Backspace') {
+                const sel = window.getSelection();
+                if (sel.isCollapsed && sel.anchorOffset === 0) {
+                    const node = sel.anchorNode;
+                    const element = node.nodeType === 3 ? node.parentElement : node;
+                    const todoItem = element.closest('.todo-item');
+                    if (todoItem) {
+                        e.preventDefault();
+                        const p = document.createElement('p');
+                        p.innerHTML = '<br>';
+                        todoItem.replaceWith(p);
+                        const range = document.createRange();
+                        range.selectNodeContents(p);
+                        range.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        triggerAutoSave();
+                    }
+                }
+            }
+        }
+
+        function openSlashMenu(x, y) {
+            slashMenu.style.left = Math.min(x, window.innerWidth - 300) + 'px';
+            slashMenu.style.top = Math.min(y, window.innerHeight - 300) + 'px';
+            slashMenu.classList.add('open');
+            slashActive = true;
+        }
+
+        function closeSlashMenu() {
+            slashMenu.classList.remove('open');
+            slashActive = false;
+        }
+
+        function execCmd(command, value = null) {
+            // Tier-gate advanced commands
+            if (command !== 'formatBlock' || value !== 'P') {
+                if (!checkTier('slash_feature')) {
+                    showToast("Advanced blocks require a Pro plan.", "upgrade");
+                    closeSlashMenu();
+                    return;
+                }
+            }
+
+            editorCanvas.focus();
+            if (savedRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
+            }
+            document.execCommand('delete');
+            document.execCommand(command, false, value);
+            closeSlashMenu();
+            triggerAutoSave();
+        }
+
+        function insertTodo() {
+            if (!checkTier('slash_feature')) {
+                showToast("To-do lists require a Pro plan.", "upgrade");
+                closeSlashMenu();
+                return;
+            }
+            editorCanvas.focus();
+            if (savedRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
+            }
+            document.execCommand('delete');
+            const html = `<div class="todo-item"><input type="checkbox" class="todo-checkbox"><div class="todo-content" contenteditable="true">Task</div></div><p><br></p>`;
+            document.execCommand('insertHTML', false, html);
+            closeSlashMenu();
+            triggerAutoSave();
+        }
+
+        function insertQuote() {
+            if (!checkTier('slash_feature')) {
+                showToast("Quote blocks require a Pro plan.", "upgrade");
+                closeSlashMenu();
+                return;
+            }
+            editorCanvas.focus();
+            if (savedRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
+            }
+            document.execCommand('delete');
+            const html = `<blockquote contenteditable="true">Quote...</blockquote><p><br></p>`;
+            document.execCommand('insertHTML', false, html);
+            closeSlashMenu();
+        }
+
+        // --- AGENT WIDGET LOGIC ---
+        let isInterfaceOpen = false;
+        let chatHistory = [];
+
+        function toggleInterface() {
+            const chatInterface = document.getElementById('chat-interface');
+            isInterfaceOpen = !isInterfaceOpen;
+            if (isInterfaceOpen) {
+                chatInterface.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+            } else {
+                chatInterface.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+            }
+        }
+
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+
+        function createMessage(text, type) {
+            const chatWindow = document.getElementById('chatWindow');
+            const div = document.createElement('div');
+            div.className = `msg ${type === 'user' ? 'user-msg' : 'ai-msg'}`;
+            div.innerText = text;
+            chatWindow.appendChild(div);
+            chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const chatWindow = document.getElementById('chatWindow');
+            const typingArea = document.getElementById('typingArea');
+            const val = userInput.value.trim();
+            if (!val) return;
+
+            createMessage(val, 'user');
+            chatHistory.push({ role: 'user', content: val });
+            userInput.value = '';
+            
+            if(typingArea) typingArea.style.display = 'flex';
+            if(chatWindow) chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/agent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        input_text: val,
+                        dashboard_state: { // In notebook context, send notebook data
+                            title: titleInput.value,
+                            content_preview: editorCanvas.innerText.slice(0, 1000),
+                            chat_history: chatHistory
+                        }
+                    })
+                });
+
+                if(typingArea) typingArea.style.display = 'none';
+
+                if (!res.ok) throw new Error(`API error: ${res.status}`);
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                if (data.text) {
+                    createMessage(data.text, 'agent');
+                    chatHistory.push({ role: 'agent', content: data.text });
+                }
+
+                if (data.commands && data.commands.length > 0) {
+                    handleAgentCommands(data.commands);
+                }
+
+            } catch (e) {
+                console.error('❌ Agent Error:', e);
+                if(typingArea) typingArea.style.display = 'none';
+                createMessage("Sorry, I couldn't connect to the AI. Please try again.", 'agent');
+            }
+        }
+
+        function handleAgentCommands(commands) {
+            commands.forEach(cmd => {
+                if (cmd.type === 'notebook_entry' && cmd.payload && cmd.payload.content) {
+                    // Append content to editor
+                    const newP = document.createElement('p');
+                    newP.innerHTML = cmd.payload.content; // Allow basic HTML if agent sends it
+                    editorCanvas.appendChild(newP);
+                    triggerAutoSave();
+                    showToast("Content added by Agent", "normal");
+                } else if (cmd.type === 'create_notebook') {
+                     // In the notebook view, if the agent creates a new notebook, we likely want to switch to it
+                     // or just notify. For now, let's notify.
+                     showToast(`Agent created new notebook: ${cmd.payload.title}`, "normal");
+                     // Ideally we'd reload the sidebar list too
+                     fetchNotes();
+                }
+            });
+        }
+        
+        // --- END AGENT WIDGET LOGIC ---
+
+        function focusEditor(e) {
+            if (e.target === editorCanvas || e.target.id === 'main-scroll') {
+                // Only focus if not clicking a child
+                if (e.target === editorCanvas) {
+                    // Move to end?
+                }
+            }
+        }
+    </script>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+    <script>
+        function showToast(msg, type = 'normal') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = type === 'upgrade' ? `<i class="lucide-zap w-4 h-4 text-purple-400"></i> ${msg} <button onclick="window.location.href='/pricing'" class="ml-2 px-2 py-1 bg-purple-500 rounded text-[10px] font-bold">UPGRADE</button>` : msg;
+            container.appendChild(el);
+            setTimeout(() => el.classList.add('show'), 10);
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+        // Start Init
+        init();
+    </script>
+</body>
+
+</html>
