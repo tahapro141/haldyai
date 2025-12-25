@@ -1417,7 +1417,7 @@ window.location.href = '/signin';
                 colEl.style.left = col.x + 'px';
                 colEl.style.top = col.y + 'px';
                 colEl.innerHTML = `
-                   <div class="column-header" onmousedown="startDrag(event, 'col', '${col.id}')">
+                   <div class="column-header" onmousedown="startDrag(event, 'col', '${col.id}')" ontouchstart="startDrag(event, 'col', '${col.id}')">
                         <input class="col-title-input" value="${col.title}" oninput="renameCol('${col.id}', this.value)">
                         <i class="ri-close-circle-line" style="color:#444; cursor:pointer;" onclick="deleteCol('${col.id}')"></i>
                     </div>
@@ -1435,6 +1435,7 @@ window.location.href = '/signin';
                     div.id = t.id;
                     div.setAttribute('data-due-date', t.due_date || '');
                     div.onmousedown = (e) => startDrag(e, 'task', t.id, col.id);
+                    div.ontouchstart = (e) => startDrag(e, 'task', t.id, col.id);
                     div.innerHTML = `
                         <div class="task-header">
                             <div class="check-circle" onclick="toggleComplete('${col.id}', '${t.id}')"><i class="ri-check-line"></i></div>
@@ -1755,8 +1756,19 @@ window.location.href = '/signin';
 
         window.startDrag = function (e, type, id, parentId) {
             if (e.target.tagName === 'INPUT' || e.target.closest('.action-btn') || e.target.closest('.check-circle') || e.target.tagName === 'BUTTON') return;
-            e.stopPropagation(); e.preventDefault();
-            drag.active = true; drag.type = type; drag.startX = e.clientX; drag.startY = e.clientY;
+            
+            let clientX, clientY;
+            if (e.type === 'touchstart') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                e.preventDefault(); 
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            e.stopPropagation();
+
+            drag.active = true; drag.type = type; drag.startX = clientX; drag.startY = clientY;
 
             if (type === 'col') {
                 const col = state.columns.find(c => c.id === id);
@@ -1764,7 +1776,6 @@ window.location.href = '/signin';
                 drag.elem.classList.add('dragging');
                 drag.initialX = col.x;
                 drag.initialY = col.y;
-                // No transition during drag for instant movement
                 drag.elem.style.transition = 'none';
             } else {
                 drag.item = { id, parentId };
@@ -1777,12 +1788,12 @@ window.location.href = '/signin';
                 drag.ghost.style.opacity = '0.9';
                 drag.ghost.style.transform = 'rotate(2deg)';
                 drag.ghost.style.boxShadow = '0 20px 50px rgba(0,0,0,0.5)';
-                drag.ghost.style.transition = 'none'; // No transitions for instant  movement
+                drag.ghost.style.transition = 'none';
                 const rect = original.getBoundingClientRect();
-                drag.offsetX = e.clientX - rect.left;
-                drag.offsetY = e.clientY - rect.top;
-                drag.ghost.style.left = (e.clientX - drag.offsetX) + 'px';
-                drag.ghost.style.top = (e.clientY - drag.offsetY) + 'px';
+                drag.offsetX = clientX - rect.left;
+                drag.offsetY = clientY - rect.top;
+                drag.ghost.style.left = (clientX - drag.offsetX) + 'px';
+                drag.ghost.style.top = (clientY - drag.offsetY) + 'px';
                 document.body.appendChild(drag.ghost);
                 original.style.opacity = '0.3';
             }
@@ -1834,6 +1845,62 @@ window.location.href = '/signin';
         viewport.addEventListener('touchend', () => {
             initialPinch = 0;
             pan.active = false;
+        });
+
+        // --- TOUCH EVENTS FOR DRAGGING (Mobile Support) ---
+        window.addEventListener('touchmove', e => {
+            if (!drag.active) return;
+            // Prevent scrolling while dragging a card/task
+            e.preventDefault(); 
+            const touch = e.touches[0];
+            
+            if (drag.type === 'col') {
+                const newX = drag.initialX + (touch.clientX - drag.startX) / state.scale;
+                const newY = drag.initialY + (touch.clientY - drag.startY) / state.scale;
+                
+                drag.item.x = newX;
+                drag.item.y = newY;
+                drag.elem.style.left = newX + 'px';
+                drag.elem.style.top = newY + 'px';
+                
+                drawLines();
+            } else if (drag.ghost) {
+                drag.ghost.style.left = (touch.clientX - drag.offsetX) + 'px';
+                drag.ghost.style.top = (touch.clientY - drag.offsetY) + 'px';
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', async e => {
+            if (!drag.active) return;
+            
+            if (drag.type === 'col') {
+                drag.elem.classList.remove('dragging');
+                drag.elem.style.transition = '';
+                await saveColumnLayout();
+            } else if (drag.ghost) {
+                drag.ghost.remove();
+                drag.ghost = null;
+                const original = document.getElementById(drag.item.id);
+                if (original) original.style.opacity = '1';
+                
+                // Use changedTouches for the end event
+                const touch = e.changedTouches[0];
+                const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+                const colEl = elements.find(el => el.classList.contains('column'));
+                
+                if (colEl && colEl.id !== drag.item.parentId) {
+                    const taskId = drag.item.id;
+                    const sourceCol = state.columns.find(c => c.id === drag.item.parentId);
+                    const targetCol = state.columns.find(c => c.id === colEl.id);
+                    const tIdx = sourceCol.tasks.findIndex(t => t.id === taskId);
+                    const [t] = sourceCol.tasks.splice(tIdx, 1);
+                    t.column_id = colEl.id;
+                    targetCol.tasks.push(t);
+                    render();
+                    await DB.saveTask(t);
+                }
+            }
+            drag.active = false;
         });
 
         // Mouse Events - INSTANT MOVEMENT
